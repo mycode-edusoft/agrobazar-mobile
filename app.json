@@ -1,25 +1,71 @@
 {
   "expo": {
-    "name": "agrobazar-mobile",
+    "name": "Aqrobazar",
     "slug": "agrobazar-mobile",
     "version": "1.0.0",
+    "scheme": "aqrobazar",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.aqrobazar.app"
     },
     "android": {
+      "package": "com.aqrobazar.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#358D1A",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-image",
+      "expo-secure-store",
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Elan və mağaza şəkillərini seçmək üçün qalereyaya giriş lazımdır.",
+          "cameraPermission": "Elan şəkli çəkmək üçün kameraya giriş lazımdır."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "backgroundColor": "#358D1A",
+          "resizeMode": "contain",
+          "imageWidth": 207
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e2d98f39-4c70-4179-b40f-4c0b469af70c"
+      }
+    },
+    "owner": "zekiyev014s-team",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/e2d98f39-4c70-4179-b40f-4c0b469af70c"
     }
   }
 }
