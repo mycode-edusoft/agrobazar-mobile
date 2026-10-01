@@ -12,6 +12,7 @@ import { api } from '@/services';
 import { useAuthStore } from '@/store/auth';
 import { useFavoritesStore } from '@/store/favorites';
 import { colors, layout, radii } from '@/theme';
+import { Icon } from '@/components/icons/Icon';
 
 export default function StoreScreen() {
   const router = useRouter();
@@ -102,7 +103,7 @@ export default function StoreScreen() {
               </IconButton>
             ) : (
               <IconButton onPress={() => toggleFav(s.id).catch(() => undefined)} accessibilityLabel={t.tabs.favorites}>
-                <Ionicons name={isFav ? 'heart' : 'heart-outline'} size={16} color={isFav ? colors.price : colors.textMuted} />
+                <Icon name="heart" size={16} color={isFav ? colors.price : colors.textMuted} />
               </IconButton>
             )
           }

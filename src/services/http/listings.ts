@@ -56,11 +56,24 @@ export const httpListings: ListingApi = {
     return { items: items.map(mapSummary), total: count, page, hasMore: hasNext };
   },
 
-  async premium(categoryId) {
-    const res = await request<unknown>('listings/listings/premium/', {
-      auth: false,
-      query: { page_size: 10, category: categoryId },
-    });
+  async premium(filter) {
+    // `listings/premium/` kateqoriya filtrini qəbul etmir (backend boşluğu) — süzgəc varsa
+    // premium elanlar ES axtarışından `is_premium=true` ilə götürülür
+    if (filter?.categoryId || filter?.query) {
+      const res = await request<unknown>('listings/es_filter_search/', {
+        auth: false,
+        query: {
+          page_size: 10,
+          q: filter.query,
+          category: filter.categoryId,
+          subcategory: filter.subcategoryId,
+          subsubcategory: filter.subsubIds?.[0],
+          is_premium: true,
+        },
+      });
+      return unwrapList<ApiListing>(res).items.map(mapSummary);
+    }
+    const res = await request<unknown>('listings/listings/premium/', { auth: false, query: { page_size: 10 } });
     return unwrapList<ApiListing>(res).items.map(mapSummary);
   },
 

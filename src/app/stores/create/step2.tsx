@@ -8,6 +8,7 @@ import { t } from '@/i18n/az';
 import { useCities } from '@/lib/queries';
 import { useStoreDraft } from '@/store/storeDraft';
 import { colors, layout } from '@/theme';
+import { Icon } from '@/components/icons/Icon';
 
 const hours = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, '0')}:00`);
 const hourOptions = hours.map((h) => ({ value: h, label: h }));
@@ -22,7 +23,7 @@ export default function CreateStoreStep2() {
   const [touched, setTouched] = useState(false);
   const valid = !!draft.city && draft.address.trim().length >= 3;
 
-  const chevron = <Ionicons name="chevron-down" size={20} color={colors.textMuted} />;
+  const chevron = <Icon name="chevron" direction="down" size={20} color={colors.textMuted} />;
 
   return (
     <Screen

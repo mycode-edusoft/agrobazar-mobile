@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { AppText, Card, Divider, Pill, Screen, ScreenHeader } from '@/components/ui';
 import { t } from '@/i18n/az';
 import { legalDocuments } from '@/i18n/legal';
 import { colors, layout } from '@/theme';
+import { Icon } from '@/components/icons/Icon';
 
 type Tab = keyof typeof legalDocuments;
 const tabs: Tab[] = ['agreement', 'listing', 'paid', 'balance'];
@@ -48,7 +48,7 @@ export default function RulesScreen() {
                   <AppText variant="smallMedium" color={colors.textSecondary} style={styles.flex}>
                     {i + 1}. {s.title}
                   </AppText>
-                  <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textSecondary} />
+                  <Icon name="chevron" direction={expanded ? 'up' : 'down'} size={18} color={colors.textSecondary} />
                 </Pressable>
                 {expanded ? (
                   <AppText variant="small" color="rgba(0,0,0,0.45)" style={styles.accBody}>

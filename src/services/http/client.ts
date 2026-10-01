@@ -1,6 +1,11 @@
+import { Platform } from 'react-native';
 import { ApiError } from '../api';
 
-export const API_BASE_URL = (process.env.EXPO_PUBLIC_API_URL ?? 'https://aqrobazar.com').replace(/\/+$/, '');
+const CONFIGURED_API_URL = (process.env.EXPO_PUBLIC_API_URL ?? 'https://aqrobazar.com').replace(/\/+$/, '');
+
+// Web dev önizləməsində sorğular Metro-nun öz origin-inə gedir və metro.config.js proxy-si ilə API-yə ötürülür (CORS)
+export const API_BASE_URL =
+  Platform.OS === 'web' && __DEV__ && typeof window !== 'undefined' ? window.location.origin : CONFIGURED_API_URL;
 
 type TokenPair = { access: string; refresh: string };
 

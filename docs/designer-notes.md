@@ -38,7 +38,7 @@ Hər bənd üçün Figma bölməsi və mümkün olduqda node ID verilib.
 ## 🟠 4. Ana səhifə — servis kartları
 
 - **Harada:** `Home` → `Guess` (`2137:13966`), aşağıdakı kart bloku.
-- "Xarici ünvanlar", "Təsdiq kodları", "Təhvil məntəqələri", "Kalkulator" funksiyaları biznes tələblərində (BRD) yoxdur və məhsul qərarı ilə tətbiqdən **çıxarılıb**. Yalnız **"Tariflər"** kartı saxlanılıb.
+- "Xarici ünvanlar", "Təsdiq kodları", "Təhvil məntəqələri", "Kalkulator" funksiyaları biznes tələblərində (BRD) yoxdur və məhsul qərarı ilə tətbiqdən **çıxarılıb**. "Tariflər" kartı da App 2 dizaynına uyğun olaraq çıxarılıb — ana səhifədə servis kartı yoxdur.
 - **Lazımdır:** bu kartları dizayndan da çıxarın və ya ayrıca funksiya kimi planlaşdırılırsa, ekranlarını hazırlayın.
 
 ## 🟢 5. Uyğunsuzluqlar
@@ -47,6 +47,15 @@ Hər bənd üçün Figma bölməsi və mümkün olduqda node ID verilib.
 - **Kataloq çipləri:** "Heyvanlar" səhifəsində çiplər *Bizon, Buğa, Dana, Düyə, İnək, Öküz* — bunlar kateqoriyanın 3-cü səviyyəsidir (alt-alt kateqoriya). Backend-də ağac *Heyvanlar → İribuynuzlu heyvanlar → Bizon…* kimidir. Tətbiq çiplərdə bütün alt-alt kateqoriyaları göstərir. Niyyət bu idisə təsdiqləyin; 2-ci səviyyə (İribuynuzlu / Xırdabuynuzlu / Atlar) nəzərdə tutulubsa bildirin.
 - **Kateqoriya adları:** Figma-da "Dəniz məhsulları", backend-də **"Su Canlıları"**; bir neçə adda da fərq var. Tətbiq backend adlarını göstərir.
 - **Elan detalı — "Cins" etiketi** (`Elan details`, `2137:26779`): 3-cü səviyyə (alt-alt kateqoriya) bütün kateqoriyalar üçün "Cins" adlanır. Heyvanlar üçün uyğundur, amma texnika, gübrə, torpaq üçün yox (məs. *Traktorlar → Cins: Belarus*). Tətbiqdə neytral **"Növ"** işlədilir — universal etiket təsdiqlənsin və ya kateqoriyaya görə fərqli etiket verilsin.
+
+- **Ana səhifə — kateqoriya plitələri** (App 2 → Home "Guess"): ilk 7 plitə 54×54, radius 8, ad 10px; sonuncu ikisi ("Meyvələr Tərəvəzlər", "K/T Məhsullar Ədviyatlar") **70×70, radius 18, ad 12px TT Hoves**; "Bitkilər Toxumlar" adı isə **8px Inter**. Kateqoriyalar backend-dən dinamik gəlir, ona görə tətbiqdə hamısı eyni ölçüdədir (54×54, 10px). Vahid ölçü təsdiqlənsin.
+- **Şrift qarışıqlığı:** kartlarda Inter (qiymət, ad, tarix), "Satılır" etiketində SF Pro, bəzi kateqoriya adlarında TT Hoves, qalan yerlərdə Roboto işlənir. Tətbiqdə hər yerdə **Roboto** işlədilir (ölçü, çəki, rəng dizayndakı kimidir). Dizayn sistemində bir şrift ailəsi seçilsin.
+- **Kartdakı Premium düyməsi:** `inset` kölgə (daxili qırmızı işıltı) mobil platformalarda standart dəstəklənmir — tətbiqdə yalnız qradiyent (#FF866B → #F66848) var.
+
+- **Kataloq (App 2) — Premium işarələri ana səhifədən fərqlidir:** Kataloq nəticə ekranında başlıq *"Premium elanlar ✅"* (yaşıl təsdiq), kartdakı nişan **çəhrayı kvadrat + ağ almaz**; ana səhifədə isə *"Premium elanlar 👑"* və **narıncı qradiyent + tac**. Eyni məfhum üçün bir işarə seçilsin — tətbiqdə hər yerdə tac işlədilir.
+  *Qərar (2026-10-01):* hələlik hər yerdə tac saxlanılır — dizayner birini seçənə qədər.
+- **Kart kölgəsi uyğunsuzluğu:** ana səhifədəki elan kartlarında kölgə var (`0 0 14 rgba(0,0,0,.08)`), Kataloq nəticə ekranındakı eyni kartlarda **kölgə yoxdur**, Premium düyməsi də qradiyentsiz (`#FF5964`). Qəsdən fərqdirsə təsdiqlənsin, deyilsə bir variant seçilsin. Tətbiqdə hər yerdə kölgəli kart işlənir.
+- **Kataloq nəticə ekranında tab bar** göstərilib, amma bu ekran kataloq axınının içindədir (geri düyməsi var). Tətbiqdə hazırda tab bar yoxdur — təsdiqlənsin.
 
 ## 🟠 6. Şəxsi kabinet
 
@@ -57,7 +66,14 @@ Hər bənd üçün Figma bölməsi və mümkün olduqda node ID verilib.
   - Ad, email və telefon sahələri redaktə edilə bilən kimi görünür, amma BRD-yə görə **ad bir dəfə yazıldıqdan sonra kilidlənir, telefon heç vaxt dəyişmir, email isə ayrıca kod təsdiqli axınla dəyişir**. Kilidli vəziyyətin və "email dəyiş" girişinin görünüşü dizayn edilsin.
 - **Yazılış:** "Aktif tarifim" (türkcə) — tətbiqin qalan yerlərində azərbaycanca "Aktiv" işlənir. "Aktiv tarifim" olmalıdır? Hazırda dizayndakı kimi saxlanılıb.
 
-## 🟠 7. Backend ilə ziddiyyət
+## 🟠 7. Log in (Kabinetə giriş)
+
+- **İngiliscə mətnlər:** alt başlıq *"Here you can add or replace your phone number"* (həm də məna uyğun deyil — bu giriş ekranıdır, nömrə dəyişmə yox) və doldurulmuş sahənin etiketi *"Phone"*. Tətbiqdə: *"Telefon nömrənizi daxil edin, SMS ilə təsdiq kodu göndərəcəyik"* və *"Telefon"*.
+- **Ölkə kodu səhvi:** OTP ekranında *"+995 55 2809869 nömrəsinə SMS kod göndərildi"* — +995 Gürcüstanın kodudur, Azərbaycan **+994**-dür.
+- **OTP xanalarının sayı:** dizaynda **4** xana, BRD-də və backend-də kod **6 rəqəmlidir**. Tətbiqdə 6 xana göstərilir — dizayn 6-ya yenilənsin.
+- **"istifadəçi razılaşması" linki** hələlik "Qaydalar" səhifəsinə aparır — ayrıca İstifadəçi razılaşması səhifəsi/mətni nəzərdə tutulursa, lazımdır.
+
+## 🟠 8. Backend ilə ziddiyyət
 
 - **Bizimlə əlaqə forması:** backend `email` sahəsini **məcburi** tələb edir, formada isə email sahəsi yoxdur. Ya formaya email əlavə olunsun, ya da backend-də məcburilik götürülsün (bu, backend komandası ilə birlikdə həll edilməlidir).
 

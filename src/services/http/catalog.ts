@@ -1,7 +1,7 @@
 import type { Banner, DynamicFieldDef } from '@/types/domain';
 import type { CatalogApi, SearchSuggestion } from '../api';
 import { request, unwrapList } from './client';
-import { mapCategory, type ApiCategory } from './mappers';
+import { mapCategory, type ApiCategory, type ApiSubcategory } from './mappers';
 
 interface ApiCity {
   id: number;
@@ -95,9 +95,25 @@ interface ApiSuggestion {
 }
 
 export const httpCatalog: CatalogApi = {
+  // `categories/` yalnız 2 səviyyə qaytarır; növlər (subsubcategories) kateqoriyanın
+  // `subcategories/` endpoint-indədir — paralel yüklənib ağaca birləşdirilir (react-query cache edir).
   async categories() {
     const res = await request<ApiCategory[] | { results: ApiCategory[] }>('listings/categories/', { auth: false });
-    return unwrapList<ApiCategory>(res).items.map(mapCategory);
+    const cats = unwrapList<ApiCategory>(res).items;
+    const withTypes = await Promise.all(
+      cats.map(async (c) => {
+        try {
+          const subs = await request<ApiSubcategory[] | { results: ApiSubcategory[] }>(
+            `listings/categories/${c.slug}/subcategories/`,
+            { auth: false },
+          );
+          return { ...c, subcategories: unwrapList<ApiSubcategory>(subs).items };
+        } catch {
+          return c; // növlər yüklənməsə, kateqoriya yenə 2 səviyyə ilə göstərilir
+        }
+      }),
+    );
+    return withTypes.map(mapCategory);
   },
 
   // Backend tək banner qaytarır: { banner: {...} } — massivə normallaşdırılır
@@ -106,12 +122,17 @@ export const httpCatalog: CatalogApi = {
       request<{ banner?: ApiBanner | null }>('core/banners/home-center/public/', { auth: false }).catch(() => null),
       request<{ banner?: ApiBanner | null }>('core/banners/side/public/', { auth: false }).catch(() => null),
     ]);
-    return [center?.banner, side?.banner]
-      .filter((b): b is ApiBanner => !!b && !!bannerImage(b))
-      .map((b) => ({
-        id: String(b.id),
+    // Hər iki cədvəlin öz id ardıcıllığı var (ikisi də 1-dən başlayır) — açar yerə görə prefikslənir
+    return [
+      { slot: 'center', b: center?.banner },
+      { slot: 'side', b: side?.banner },
+    ]
+      .filter((x): x is { slot: string; b: ApiBanner } => !!x.b && !!bannerImage(x.b))
+      .map(({ slot, b }) => ({
+        id: `${slot}-${b.id}`,
         image: bannerImage(b),
-        title: b.alt_text || null,
+        // alt_text şəkil üçün alternativ mətndir, başlıq deyil — şəklin üstünə yazılmır
+        title: null,
         highlight: null,
         categoryId: null,
         link: b.link || null,

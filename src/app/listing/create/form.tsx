@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -16,6 +15,7 @@ import { useAuthStore } from '@/store/auth';
 import { useListingDraft } from '@/store/listingDraft';
 import { colors, layout } from '@/theme';
 import type { ListingType } from '@/types/domain';
+import { Icon } from '@/components/icons/Icon';
 
 const listingTypes: ListingType[] = ['sale', 'rent', 'wanted', 'offer'];
 
@@ -107,7 +107,7 @@ export default function CreateListingFormScreen() {
     router.replace('/cabinet/my-listings');
   };
 
-  const chevron = <Ionicons name="chevron-down" size={20} color={colors.textMuted} />;
+  const chevron = <Icon name="chevron" direction="down" size={20} color={colors.textMuted} />;
   const categoryLabel = [category?.name, subcategory?.name].filter(Boolean).join(' / ');
 
   return (

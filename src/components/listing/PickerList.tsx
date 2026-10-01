@@ -1,8 +1,8 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { AppText, SearchBar } from '@/components/ui';
 import { colors, layout } from '@/theme';
+import { Icon } from '@/components/icons/Icon';
 
 export interface PickerItem {
   id: string;
@@ -41,7 +41,7 @@ export function PickerList({ items, onSelect, searchPlaceholder, selectedId }: P
             <AppText variant="body" color={selectedId === item.id ? colors.primary : colors.textSecondary} style={styles.flex}>
               {item.name}
             </AppText>
-            <Ionicons name="chevron-forward" size={18} color={colors.textPlaceholder} />
+            <Icon name="chevron" direction="right" size={18} color={colors.textPlaceholder} />
           </Pressable>
         )}
       />

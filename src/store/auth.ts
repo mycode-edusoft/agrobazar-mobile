@@ -1,5 +1,5 @@
-import * as SecureStore from 'expo-secure-store';
 import { create } from 'zustand';
+import { secureStorage } from '@/lib/secureStorage';
 import { api, onTokensChanged, setTokens } from '@/services';
 import type { AuthSession, User } from '@/types/domain';
 
@@ -17,10 +17,10 @@ interface AuthState {
 }
 
 async function persistTokens(access: string | null, refresh: string | null) {
-  if (access) await SecureStore.setItemAsync(TOKEN_KEY, access);
-  else await SecureStore.deleteItemAsync(TOKEN_KEY).catch(() => undefined);
-  if (refresh) await SecureStore.setItemAsync(REFRESH_KEY, refresh);
-  else await SecureStore.deleteItemAsync(REFRESH_KEY).catch(() => undefined);
+  if (access) await secureStorage.set(TOKEN_KEY, access);
+  else await secureStorage.remove(TOKEN_KEY).catch(() => undefined);
+  if (refresh) await secureStorage.set(REFRESH_KEY, refresh);
+  else await secureStorage.remove(REFRESH_KEY).catch(() => undefined);
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -42,8 +42,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     try {
       const [access, refresh] = await Promise.all([
-        SecureStore.getItemAsync(TOKEN_KEY),
-        SecureStore.getItemAsync(REFRESH_KEY),
+        secureStorage.get(TOKEN_KEY),
+        secureStorage.get(REFRESH_KEY),
       ]);
       if (access && refresh) {
         setTokens({ access, refresh });

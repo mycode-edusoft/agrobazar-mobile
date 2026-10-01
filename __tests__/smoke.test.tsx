@@ -10,10 +10,10 @@ it('app boots and every core route renders', async () => {
   jest.useRealTimers();
   await pending;
 
-  // Ana səhifə: axtarış, kateqoriya sırası, Premium bloku, servis kartları, tab bar
+  // Ana səhifə: axtarış, kateqoriya sırası, Premium bloku, tab bar (servis kartları yoxdur — məhsul qərarı)
   await waitFor(() => expect(screen.getAllByText(t.catalog.premium).length).toBeGreaterThan(0));
   expect(screen.getByPlaceholderText(t.catalog.searchProduct)).toBeTruthy();
-  expect(screen.getAllByText(t.home.services.plans).length).toBeGreaterThan(0);
+  expect(screen.queryByText(t.home.services.plans)).toBeNull();
   await waitFor(() => expect(screen.getAllByText('Heyvanlar').length).toBeGreaterThan(0));
   expect(screen.getByText(t.tabs.stores)).toBeTruthy();
   expect(screen.getByText(t.tabs.cabinet)).toBeTruthy();
@@ -60,9 +60,9 @@ it('app boots and every core route renders', async () => {
 
   // Auth: telefon → OTP → kabinet
   await act(() => router.push('/auth/phone?returnTo=/cabinet'));
-  await waitFor(() => expect(screen.getByPlaceholderText(t.auth.phonePlaceholder)).toBeTruthy());
-  await fireEvent.changeText(screen.getByPlaceholderText(t.auth.phonePlaceholder), '552809869');
-  await fireEvent.press(screen.getByText(t.common.continue));
+  await waitFor(() => expect(screen.getByDisplayValue('(0')).toBeTruthy());
+  await fireEvent.changeText(screen.getByDisplayValue('(0'), '552809869');
+  await fireEvent.press(screen.getByText(t.auth.sendCode));
   await waitFor(() => expect(screen.getByText(/SMS kod göndərildi/)).toBeTruthy());
 
   await fireEvent.changeText(screen.getByDisplayValue(''), '123456');
@@ -88,4 +88,5 @@ it('app boots and every core route renders', async () => {
 
   await act(() => router.push('/listing/create'));
   await waitFor(() => expect(screen.getByText(t.createListing.blocked.profile_incomplete)).toBeTruthy());
-});
+  // Bütün tətbiqi gəzən tək axın — zəif maşında (Metro paralel işləyəndə) 5 san-lik standart limit azdır
+}, 60_000);

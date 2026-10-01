@@ -78,7 +78,8 @@ export interface CreateListingInput {
 
 export interface ListingApi {
   search(filter: ListingFilter, page: number): Promise<Paginated<ListingSummary>>;
-  premium(categoryId?: string): Promise<ListingSummary[]>;
+  /** Süzgəcsiz — ana səhifə (backend ədalətli sıralama); süzgəclə — kateqoriya/alt kateqoriya/növ üzrə */
+  premium(filter?: ListingFilter): Promise<ListingSummary[]>;
   vip(categoryId?: string): Promise<ListingSummary[]>;
   byId(id: string): Promise<Listing>;
   mine(status: ListingStatus): Promise<ListingSummary[]>;

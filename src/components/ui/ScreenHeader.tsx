@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { colors, layout } from '@/theme';
 import { AppText } from './AppText';
 import { IconButton } from './IconButton';
+import { Icon } from '@/components/icons/Icon';
 
 interface Props {
   title: string;
@@ -25,7 +25,8 @@ export function ScreenHeader({ title, onBack, hideBack, rightText, onRightPress,
       <View style={styles.side}>
         {hideBack ? null : (
           <IconButton onPress={back} accessibilityLabel="Geri">
-            <Ionicons name="chevron-back" size={18} color={colors.textMuted} />
+            {/* Figma: "angle" 20px, 28px ağ dairədə */}
+            <Icon name="chevron" direction="left" size={20} color={colors.textMuted} />
           </IconButton>
         )}
       </View>

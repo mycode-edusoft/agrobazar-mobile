@@ -17,6 +17,7 @@ import { api } from '@/services';
 import { useAuthStore } from '@/store/auth';
 import { colors, layout, radii, shadows } from '@/theme';
 import type { ListingStatus } from '@/types/domain';
+import { Icon } from '@/components/icons/Icon';
 
 // Figma: Şəxsi kabinet (2137:14480)
 export default function CabinetScreen() {
@@ -35,7 +36,7 @@ export default function CabinetScreen() {
 
   const settings = (
     <IconButton onPress={() => router.push('/cabinet/settings')} accessibilityLabel={t.cabinet.settings}>
-      <Ionicons name="settings-outline" size={18} color={colors.textMuted} />
+      <Icon name="setting" size={18} color={colors.textMuted} />
     </IconButton>
   );
 
@@ -55,7 +56,7 @@ export default function CabinetScreen() {
         </Card>
         <Card style={styles.guestMenu}>
           <ListRow
-            icon={<Ionicons name="settings-outline" size={22} color={colors.textMuted} />}
+            icon={<Icon name="setting" size={22} color={colors.textMuted} />}
             label={t.cabinet.settings}
             onPress={() => router.push('/cabinet/settings')}
             last
@@ -106,7 +107,7 @@ export default function CabinetScreen() {
           onPress={() => router.push('/cabinet/balance')}
           icon={
             <View style={styles.iconBox}>
-              <Ionicons name="card" size={22} color={colors.primary} />
+              <Icon name="bankCard" size={22} color={colors.primary} />
             </View>
           }
           title={t.balance.title}
@@ -175,7 +176,7 @@ function InfoCard({
           {value}
         </AppText>
       </View>
-      <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+      <Icon name="chevron" direction="right" size={20} color={colors.textSecondary} />
     </Pressable>
   );
 }

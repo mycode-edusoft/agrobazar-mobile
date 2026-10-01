@@ -19,10 +19,12 @@ interface Props extends TextInputProps {
   containerStyle?: StyleProp<ViewStyle>;
   onPressContainer?: () => void;
   multiline?: boolean;
+  /** false — fokusda mavi haşiyə göstərilmir (sahə boz fonda qalır) */
+  focusBorder?: boolean;
 }
 
 export const Input = forwardRef<TextInput, Props>(function Input(
-  { label, error, leftIcon, rightElement, containerStyle, onPressContainer, multiline, value, style, onFocus, onBlur, ...rest },
+  { label, error, leftIcon, rightElement, containerStyle, onPressContainer, multiline, focusBorder = true, value, style, onFocus, onBlur, ...rest },
   ref,
 ) {
   const [focused, setFocused] = useState(false);
@@ -34,7 +36,7 @@ export const Input = forwardRef<TextInput, Props>(function Input(
         styles.container,
         multiline && styles.multiline,
         { backgroundColor: hasValue ? colors.inputBackground : colors.inputBackgroundEmpty },
-        focused && styles.focused,
+        focused && focusBorder && styles.focused,
         !!error && styles.errored,
         containerStyle,
       ]}
@@ -87,7 +89,8 @@ const styles = StyleSheet.create({
     minHeight: layout.inputHeight,
     borderRadius: radii.sm,
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    // Etiket (20) + mətn (24) + haşiyə (2) 56-ya sığsın deyə — etiket çıxanda sahə böyüyüb qonşularından hündür olmasın
+    paddingVertical: 4,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,

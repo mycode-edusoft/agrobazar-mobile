@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { StepHeader } from '@/components/store/StepHeader';
@@ -12,6 +11,7 @@ import { api } from '@/services';
 import { useAuthStore } from '@/store/auth';
 import { useStoreDraft } from '@/store/storeDraft';
 import { colors, layout } from '@/theme';
+import { Icon } from '@/components/icons/Icon';
 
 export default function CreateStoreStep1() {
   const router = useRouter();
@@ -66,7 +66,7 @@ export default function CreateStoreStep1() {
         ) : null}
         <Input label={t.createStore.name} value={draft.name} onChangeText={(v) => set({ name: v })} placeholder={t.common.enter} error={touched && draft.name.trim().length < 2 ? t.auth.required : undefined} />
         <Input label={t.createStore.description} value={draft.description} onChangeText={(v) => set({ description: v })} placeholder={t.createListing.descriptionPlaceholder} multiline error={touched && draft.description.trim().length < 10 ? t.auth.required : undefined} />
-        <Input label={t.createStore.category} value={category?.name ?? ''} placeholder={t.common.select} onPressContainer={() => setSheet(true)} rightElement={<Ionicons name="chevron-down" size={20} color={colors.textMuted} />} />
+        <Input label={t.createStore.category} value={category?.name ?? ''} placeholder={t.common.select} onPressContainer={() => setSheet(true)} rightElement={<Icon name="chevron" direction="down" size={20} color={colors.textMuted} />} />
         <SingleImagePicker label={t.createStore.logo} uri={draft.logoUri} onChange={(logoUri) => set({ logoUri })} hint={t.createStore.uploadHint} maxBytes={STORE_DEFAULTS.maxImageBytes} />
         <SingleImagePicker label={t.createStore.cover} uri={draft.coverUri} onChange={(coverUri) => set({ coverUri })} hint={t.createStore.uploadHint} maxBytes={STORE_DEFAULTS.maxImageBytes} aspect={[16, 7]} />
       </View>

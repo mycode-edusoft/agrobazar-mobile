@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Switch as RNSwitch, TextInput, View, type StyleP
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radii, shadows, typography } from '@/theme';
 import { AppText } from './AppText';
+import { Icon } from '@/components/icons/Icon';
 
 // --- Checkbox -------------------------------------------------------------
 interface CheckboxProps {
@@ -131,7 +132,7 @@ export function SearchBar({
 }: SearchBarProps) {
   const field = (
     <View style={styles.search}>
-      <Ionicons name="search" size={18} color={colors.textMuted} />
+      <Icon name="search" size={18} color={colors.textMuted} />
       <TextInput
         value={value}
         onChangeText={onChange}
@@ -154,7 +155,7 @@ export function SearchBar({
 
   return (
     <View style={styles.searchRow}>
-      {left}
+      {left ? <View style={styles.searchLeft}>{left}</View> : null}
       {onPress ? (
         <Pressable onPress={onPress} style={styles.flex}>
           {field}
@@ -164,7 +165,7 @@ export function SearchBar({
       )}
       {onFilterPress ? (
         <Pressable onPress={onFilterPress} style={styles.filterBtn} accessibilityLabel="Filtr">
-          <Ionicons name="options-outline" size={18} color={colors.textSecondary} />
+          <Icon name="sliders" size={18} color={colors.textMuted} />
           {filterActive ? <View style={styles.filterDot} /> : null}
         </Pressable>
       ) : null}
@@ -210,7 +211,7 @@ export function ListRow({ icon, label, onPress, right, last, color = colors.text
       <AppText variant="body" color={color} style={styles.flex}>
         {label}
       </AppText>
-      {right ?? (onPress ? <Ionicons name="chevron-forward" size={18} color={colors.textPlaceholder} /> : null)}
+      {right ?? (onPress ? <Icon name="chevron" direction="right" size={18} color={colors.textPlaceholder} /> : null)}
     </Pressable>
   );
 }
@@ -240,15 +241,17 @@ const styles = StyleSheet.create({
   segmentItem: { flex: 1, height: 36, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
   segmentItemActive: { backgroundColor: colors.surface, ...shadows.smallButton },
 
-  searchRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  // Figma: geri düyməsi ilə sahə arası 16, sahə ilə filtr arası 10; hündürlük 38
+  searchRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },
+  searchLeft: { marginRight: 6 },
   search: {
-    flex: 1, minHeight: 40, borderRadius: radii.sm, backgroundColor: colors.inputBackgroundEmpty,
+    flex: 1, minHeight: 38, borderRadius: radii.sm, backgroundColor: colors.inputBackgroundEmpty,
     borderWidth: 1, borderColor: colors.divider,
     flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 8,
   },
-  searchInput: { flex: 1, ...typography.smallMedium, color: colors.text, padding: 0 },
+  searchInput: { flex: 1, ...typography.small, lineHeight: 22, color: colors.text, padding: 0 },
   filterBtn: {
-    width: 38, alignSelf: 'stretch', minHeight: 40, borderRadius: radii.sm,
+    width: 38, alignSelf: 'stretch', minHeight: 38, borderRadius: radii.sm,
     backgroundColor: colors.inputBackgroundEmpty, borderWidth: 1, borderColor: colors.divider,
     alignItems: 'center', justifyContent: 'center',
   },

@@ -52,6 +52,32 @@ export function formatPhoneInput(raw: string): string {
   return parts.filter(Boolean).join(' ');
 }
 
+/** Azərbaycan mobil operator kodları (yerli formatda, aparıcı 0 ilə göstərilir) */
+export const AZ_OPERATORS = ['10', '50', '51', '55', '60', '70', '77', '99'] as const;
+
+/**
+ * Tap.az məntiqi: tək sahə, "(0" silinməz prefiks. İstənilən mətndən (yazma, autofill, yapışdırma —
+ * "+994 55 729 37 91", "055…", "55…") operator+abunəçi 9 rəqəmini çıxarır.
+ */
+export function parseAzPhoneDigits(text: string): string {
+  let digits = text.replace(/\D/g, '');
+  if (digits.startsWith('994') && digits.length >= 12) digits = digits.slice(3);
+  return digits.replace(/^0+/, '').slice(0, 9);
+}
+
+/** 9 rəqəm → "(055) 729-37-91". Ayırıcılar yalnız növbəti rəqəmdən əvvəl qoyulur ki, silmə ilişməsin. */
+export function maskAzPhone(digits: string): string {
+  const d = digits.slice(0, 9);
+  let out = `(0${d.slice(0, 2)}`;
+  if (d.length > 2) out += `) ${d.slice(2, 5)}`;
+  if (d.length > 5) out += `-${d.slice(5, 7)}`;
+  if (d.length > 7) out += `-${d.slice(7, 9)}`;
+  return out;
+}
+
+export const isKnownAzOperator = (digits: string) =>
+  digits.length < 2 || (AZ_OPERATORS as readonly string[]).includes(digits.slice(0, 2));
+
 export function isValidAzPhone(local: string): boolean {
   return local.replace(/\D/g, '').length === 9;
 }

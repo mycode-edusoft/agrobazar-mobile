@@ -10,6 +10,7 @@ import { formatDate, formatPrice } from '@/lib/format';
 import { useFavoritesStore } from '@/store/favorites';
 import { colors, radii, shadows } from '@/theme';
 import type { ListingSummary } from '@/types/domain';
+import { Icon } from '@/components/icons/Icon';
 
 interface Props {
   item: ListingSummary;
@@ -67,7 +68,7 @@ export const ListingCard = memo(function ListingCard({
               style={styles.action}
               accessibilityLabel="Seçdiklərimə əlavə et"
             >
-              <Ionicons name={isFav ? 'heart' : 'heart-outline'} size={12} color={isFav ? colors.price : colors.textSecondary} />
+              <Icon name="heart" size={12} color={isFav ? colors.price : colors.textSecondary} />
             </Pressable>
           ) : null}
         </View>
@@ -79,7 +80,7 @@ export const ListingCard = memo(function ListingCard({
             end={{ x: 0.5, y: 1 }}
             style={styles.premium}
           >
-            <Ionicons name="diamond" size={16} color={colors.surface} />
+            <Icon name="crown" size={20} />
           </LinearGradient>
         ) : null}
       </View>
@@ -90,15 +91,14 @@ export const ListingCard = memo(function ListingCard({
             {formatPrice(item.price, item.negotiable)}
           </AppText>
           {item.price != null ? (
-            <AppText variant="price" color={colors.price}>
-              {' '}{t.common.manat}
-            </AppText>
+            // Figma: tabler currency-manat ikonu, 15px, qiymət rəngində
+            <Icon name="manat" size={15} color={colors.price} style={styles.manat} />
           ) : null}
         </View>
-        <AppText variant="caption" color={colors.textDark} numberOfLines={1}>
+        <AppText variant="caption" color={colors.textDark} numberOfLines={1} style={styles.title}>
           {item.subsubName ? `${item.subsubName} ${item.title.toLowerCase()}` : item.title}
         </AppText>
-        <AppText variant="caption" color={colors.textHelper} numberOfLines={1} style={styles.meta}>
+        <AppText variant="caption" color={META_COLOR} numberOfLines={1} style={styles.meta}>
           {item.city} - {formatDate(item.createdAt)}
         </AppText>
         {item.internationalDelivery ? <Chip label={t.listing.intlDelivery} style={styles.chip} /> : null}
@@ -106,6 +106,9 @@ export const ListingCard = memo(function ListingCard({
     </Pressable>
   );
 });
+
+// Figma kartı: şəhər/tarix — 9.33/21, rgba(53,64,82,0.63) (başlıq rənginin 63%-i)
+const META_COLOR = 'rgba(53, 64, 82, 0.63)';
 
 const styles = StyleSheet.create({
   card: {
@@ -127,9 +130,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.chipBackground, borderWidth: 1, borderColor: colors.divider,
   },
   statusText: { lineHeight: 16 },
+  // Figma "App Favorite": kölgə -2 2 10 rgba(0,0,0,.15)
   action: {
     width: 24, height: 24, borderRadius: 14, backgroundColor: colors.surface,
-    alignItems: 'center', justifyContent: 'center', ...shadows.smallButton,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 5, shadowOffset: { width: -2, height: 2 }, elevation: 3,
   },
   check: { borderWidth: 1.5, borderColor: colors.textPlaceholder },
   checkOn: { backgroundColor: colors.primary, borderColor: colors.primary },
@@ -137,8 +142,11 @@ const styles = StyleSheet.create({
     position: 'absolute', left: 8, bottom: 8, width: 32, height: 32, borderRadius: 10,
     alignItems: 'center', justifyContent: 'center',
   },
-  body: { paddingHorizontal: 8, paddingTop: 6, paddingBottom: 8, gap: 2 },
-  priceRow: { flexDirection: 'row', alignItems: 'baseline' },
-  meta: { lineHeight: 16 },
+  // Figma: şəkildən 6 aşağı, mətn bloku 21 + 24 + 21, altda 2
+  body: { paddingHorizontal: 8, paddingTop: 6, paddingBottom: 2 },
+  priceRow: { flexDirection: 'row', alignItems: 'center' },
+  manat: { marginLeft: 3 },
+  title: { lineHeight: 24 },
+  meta: { fontSize: 9.33, lineHeight: 21 },
   chip: { alignSelf: 'flex-start', marginTop: 4 },
 });

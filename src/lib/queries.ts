@@ -12,7 +12,7 @@ export const qk = {
   entitlements: ['entitlements'] as const,
   me: ['me'] as const,
   search: (f: ListingFilter, page: number) => ['listings', 'search', f, page] as const,
-  premium: (categoryId?: string) => ['listings', 'premium', categoryId ?? 'all'] as const,
+  premium: (filter?: object) => ['listings', 'premium', filter ?? 'all'] as const,
   vip: (categoryId?: string) => ['listings', 'vip', categoryId ?? 'all'] as const,
   listing: (id: string) => ['listing', id] as const,
   myListings: (status: ListingStatus) => ['listings', 'mine', status] as const,

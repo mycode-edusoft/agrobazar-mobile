@@ -12,6 +12,7 @@ import { PROFILE_DEFAULTS } from '@/lib/rules';
 import { api, ApiError } from '@/services';
 import { useAuthStore } from '@/store/auth';
 import { colors, layout } from '@/theme';
+import { Icon } from '@/components/icons/Icon';
 
 const APP_VERSION = '1.0.0';
 
@@ -122,7 +123,7 @@ export default function EditProfileScreen() {
           value={city}
           placeholder={t.cabinet.city}
           onPressContainer={() => setRegionOpen(true)}
-          rightElement={<Ionicons name="chevron-down" size={20} color={colors.textMuted} />}
+          rightElement={<Icon name="chevron" direction="down" size={20} color={colors.textMuted} />}
         />
       </View>
       <SelectSheet visible={regionOpen} onClose={() => setRegionOpen(false)} title={t.cabinet.city} options={regionOptions} value={city || null} onSelect={(v) => setCity(v ?? '')} searchable />

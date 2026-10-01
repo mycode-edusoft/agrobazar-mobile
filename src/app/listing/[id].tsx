@@ -12,6 +12,7 @@ import { api } from '@/services';
 import { useAuthStore } from '@/store/auth';
 import { useFavoritesStore } from '@/store/favorites';
 import { colors, layout, radii, shadows } from '@/theme';
+import { Icon } from '@/components/icons/Icon';
 
 const { width } = Dimensions.get('window');
 
@@ -63,8 +64,8 @@ export default function ListingDetailScreen() {
       footer={
         <FooterBar style={styles.footer}>
           <View style={styles.footerRow}>
-            <Button title={t.listing.call} variant="outline" icon={<Ionicons name="call-outline" size={20} color={colors.primary} />} onPress={call} style={styles.flex} />
-            <Button title={t.listing.whatsapp} icon={<Ionicons name="logo-whatsapp" size={20} color={colors.surface} />} onPress={whatsapp} style={styles.flex} />
+            <Button title={t.listing.call} variant="outline" icon={<Icon name="phone" size={20} color={colors.primary} />} onPress={call} style={styles.flex} />
+            <Button title={t.listing.whatsapp} icon={<Icon name="whatsapp" size={20} color={colors.surface} />} onPress={whatsapp} style={styles.flex} />
           </View>
         </FooterBar>
       }
@@ -88,7 +89,7 @@ export default function ListingDetailScreen() {
         ) : null}
         <View style={styles.galleryBar}>
           <IconButton onPress={() => router.back()} accessibilityLabel={t.common.back}>
-            <Ionicons name="chevron-back" size={18} color={colors.textMuted} />
+            <Icon name="chevron" direction="left" size={18} color={colors.textMuted} />
           </IconButton>
           <View style={styles.galleryRight}>
             <IconButton onPress={share} accessibilityLabel="Paylaş">
@@ -99,7 +100,7 @@ export default function ListingDetailScreen() {
               accessibilityLabel={t.tabs.favorites}
               style={isFav ? styles.favActive : undefined}
             >
-              <Ionicons name={isFav ? 'heart' : 'heart-outline'} size={16} color={isFav ? colors.surface : colors.textMuted} />
+              <Icon name="heart" size={16} color={isFav ? colors.surface : colors.textMuted} />
             </IconButton>
           </View>
         </View>

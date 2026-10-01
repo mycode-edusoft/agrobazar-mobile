@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View, type DimensionValue } from 'react-native';
+import { Icon } from '@/components/icons/Icon';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii } from '@/theme';
 import { AppText } from './AppText';
@@ -14,14 +14,16 @@ interface SheetProps {
   subtitle?: string;
   children: ReactNode;
   dismissOnBackdrop?: boolean;
+  /** Panelin sabit hündürlüyü (məs. '85%') — uzun siyahılar üçün */
+  height?: DimensionValue;
 }
 
-export function BottomSheet({ visible, onClose, title, subtitle, children, dismissOnBackdrop = true }: SheetProps) {
+export function BottomSheet({ visible, onClose, title, subtitle, children, dismissOnBackdrop = true, height }: SheetProps) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <Pressable style={styles.backdrop} onPress={dismissOnBackdrop ? onClose : undefined} />
-        <SafeAreaView edges={['bottom']} style={styles.panel}>
+        <SafeAreaView edges={['bottom']} style={[styles.panel, height != null && { height }]}>
           {title ? (
             <View style={styles.header}>
               <View style={styles.headerSide} />
@@ -37,7 +39,7 @@ export function BottomSheet({ visible, onClose, title, subtitle, children, dismi
               </View>
               <View style={[styles.headerSide, styles.headerRight]}>
                 <IconButton onPress={onClose} accessibilityLabel="Bağla">
-                  <Ionicons name="close" size={16} color={colors.textMuted} />
+                  <Icon name="cancel" size={23} color={colors.textMuted} />
                 </IconButton>
               </View>
             </View>
@@ -99,11 +101,11 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radii.sheet,
     paddingTop: 16,
   },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 16 },
   headerSide: { width: 28 },
   headerRight: { alignItems: 'flex-end' },
   headerCenter: { flex: 1, gap: 2 },
   divider: { height: 1, backgroundColor: colors.divider },
-  content: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12, gap: 12 },
+  content: { flexShrink: 1, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12, gap: 12 },
   actions: { flexDirection: 'row', gap: 12, paddingTop: 12 },
 });

@@ -1,8 +1,10 @@
 import type { TextStyle } from 'react-native';
 
 export const fontFamily = {
+  light: 'Roboto_300Light',
   regular: 'Roboto_400Regular',
   medium: 'Roboto_500Medium',
+  semibold: 'Roboto_600SemiBold',
   bold: 'Roboto_700Bold',
 } as const;
 
@@ -15,6 +17,11 @@ const make = (
 
 export const typography = {
   tabLabel: make('medium', 10, 12),
+  // Figma Search: "Axtarış tarixçəsi" — Roboto Light 16/24
+  bodyLight: make('light', 16, 24),
+  tabLabelRegular: make('regular', 10, 12),
+  // Figma Navbar: aktiv tab — Roboto SemiBold 10
+  tabLabelActive: make('semibold', 10, 12),
   caption: make('regular', 12, 20),
   captionMedium: make('medium', 12, 20),
   small: make('regular', 14, 20),

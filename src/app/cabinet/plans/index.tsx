@@ -11,6 +11,7 @@ import { api } from '@/services';
 import { useAuthStore } from '@/store/auth';
 import { colors, layout } from '@/theme';
 import type { BillingCycle, Plan, UserType } from '@/types/domain';
+import { Icon } from '@/components/icons/Icon';
 
 const userTypeOptions: { value: UserType; label: string }[] = [
   { value: 'individual', label: t.plans.individual },
@@ -122,7 +123,7 @@ function PlanCard({
             </AppText>
           </View>
         </View>
-        <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={20} color={colors.textMuted} />
+        <Icon name="chevron" direction={expanded ? 'up' : 'down'} size={20} color={colors.textMuted} />
       </Pressable>
       {expanded ? (
         <View style={styles.benefits}>

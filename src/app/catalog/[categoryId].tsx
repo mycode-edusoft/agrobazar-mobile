@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { ListingGrid } from '@/components/listing/ListingGrid';
@@ -10,6 +9,7 @@ import { qk, useCategory } from '@/lib/queries';
 import { api } from '@/services';
 import { activeFilterCount, useFilterStore } from '@/store/filter';
 import { colors, layout } from '@/theme';
+import { Icon } from '@/components/icons/Icon';
 
 export default function CategoryListingScreen() {
   const router = useRouter();
@@ -34,8 +34,8 @@ export default function CategoryListingScreen() {
     getNextPageParam: (last) => (last.hasMore ? last.page + 1 : undefined),
   });
   const premium = useQuery({
-    queryKey: qk.premium(effective.categoryId),
-    queryFn: () => api.listings.premium(effective.categoryId),
+    queryKey: qk.premium(effective),
+    queryFn: () => api.listings.premium(effective),
     enabled: !searching,
   });
   const vip = useQuery({
@@ -48,15 +48,17 @@ export default function CategoryListingScreen() {
   const items = list.data?.pages.flatMap((p) => p.items) ?? [];
   const title = isAll ? (effective.query ? `"${effective.query}"` : t.catalog.title) : category?.name ?? t.catalog.title;
 
-  // Figma: kateqoriya səhifəsində çiplər alt-alt kateqoriyalardır (Bizon, Buğa, Dana…)
-  const chips = (category?.subcategories ?? []).flatMap((s) => s.subsubcategories);
+  // Figma: çiplər növlərdir (Bizon, Buğa, Dana…) — alt kateqoriya seçilibsə yalnız onunkular.
+  // Axtarışda (məs. "buğa") çip sırası gizlənir — dizayner qeydi.
+  const chosenSub = category?.subcategories.find((s) => s.id === filter.subcategoryId);
+  const chips = chosenSub ? chosenSub.subsubcategories : (category?.subcategories ?? []).flatMap((s) => s.subsubcategories);
   const activeSubsub = filter.subsubIds?.[0] ?? null;
 
   const header = (
     <View style={styles.headerBlock}>
       {!searching && chips.length > 0 ? (
+        // Figma (App 2): "Hamısı" çipi yoxdur — seçilmiş çipə yenidən toxunmaq seçimi ləğv edir
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-          <Pill label={t.common.all} active={!activeSubsub} onPress={() => setFilter({ subsubIds: undefined })} />
           {chips.map((s) => (
             <Pill
               key={s.id}
@@ -72,7 +74,7 @@ export default function CategoryListingScreen() {
           <AppText variant="body" color={colors.heading}>
             {t.catalog.premium}
           </AppText>
-          <MaterialCommunityIcons name="crown" size={19} color="#F7B500" />
+          <Icon name="crownTitle" size={20} />
         </View>
       ) : null}
     </View>

@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { AppText } from '@/components/ui';
+import { BellIcon, MenuListIcon } from './HeaderIcons';
 import { t } from '@/i18n/az';
 import { useUnreadNotifications } from '@/lib/queries';
 import { colors, layout } from '@/theme';
@@ -17,11 +17,11 @@ export function HomeHeader() {
   return (
     <View style={styles.wrap}>
       <Pressable onPress={() => router.push('/menu')} hitSlop={10} accessibilityLabel="Menyu">
-        <Ionicons name="menu-outline" size={28} color={colors.textMuted} />
+        <MenuListIcon color={colors.textPlaceholder} />
       </Pressable>
       <Image source={logo} style={styles.logo} contentFit="contain" />
       <Pressable onPress={() => router.push('/notifications')} hitSlop={10} accessibilityLabel={t.notifications.title}>
-        <Ionicons name="notifications-outline" size={26} color={colors.textMuted} />
+        <BellIcon color={colors.textPlaceholder} />
         {count > 0 ? (
           <View style={styles.badge}>
             <AppText variant="tabLabel" color={colors.surface}>

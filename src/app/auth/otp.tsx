@@ -80,39 +80,54 @@ export default function OtpScreen() {
   const canResend = seconds <= 0 && resendsLeft > 0;
 
   return (
-    <Screen header={<ScreenHeader title={t.auth.title} />} background={colors.surface} keyboard>
+    <Screen
+      header={<ScreenHeader title={t.auth.title} />}
+      background={colors.surface}
+      keyboard
+      footer={
+        <View style={styles.footer}>
+          <AppText variant="caption" color={colors.textMuted} center>
+            {t.auth.legalPrefix}
+            <AppText variant="caption" color={colors.textMuted} style={styles.link} onPress={() => router.push('/info/rules')}>
+              {t.auth.legalAgreement}
+            </AppText>
+            {t.auth.legalAnd}
+            <AppText variant="caption" color={colors.textMuted} style={styles.link} onPress={() => router.push('/info/rules')}>
+              {t.auth.legalRules}
+            </AppText>
+            {t.auth.legalSuffix}
+          </AppText>
+        </View>
+      }
+    >
+      {/* Figma "Log in" 3: hər şey mərkəzə düzülür, "yenidən göndər" linkinin altında taymer */}
       <View style={styles.body}>
-        <AppText variant="small" color={colors.textMuted}>
+        <AppText variant="small" color={colors.textMuted} center>
           {t.auth.otpSent(formatDisplayPhone(phone))}
         </AppText>
         <OtpInput length={codeLength} value={code} onChange={setCode} onComplete={verify} error={!!error} />
         {error ? (
-          <AppText variant="caption" color={colors.danger}>
+          <AppText variant="caption" color={colors.danger} center>
             {error}
           </AppText>
         ) : null}
-        <View style={styles.resendRow}>
-          <Pressable onPress={resend} disabled={!canResend}>
-            <AppText variant="bodyMedium" color={canResend ? colors.link : colors.textPlaceholder}>
-              {resendsLeft <= 0 ? t.auth.resendLimit : t.auth.resend}
-            </AppText>
-          </Pressable>
-          {seconds > 0 ? (
-            <AppText variant="bodyMedium" color={colors.textSecondary}>
-              {formatCountdown(seconds)}
-            </AppText>
-          ) : null}
-        </View>
-        <AppText variant="caption" color={colors.textMuted} center style={styles.legal}>
-          {t.auth.legal}
-        </AppText>
+        <Pressable onPress={resend} disabled={!canResend} hitSlop={8}>
+          <AppText variant="bodyMedium" color={canResend ? colors.link : colors.textPlaceholder} center>
+            {resendsLeft <= 0 ? t.auth.resendLimit : t.auth.resend}
+          </AppText>
+        </Pressable>
+        {seconds > 0 ? (
+          <AppText variant="bodyMedium" color={colors.textSecondary} center>
+            {formatCountdown(seconds)}
+          </AppText>
+        ) : null}
       </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  body: { paddingHorizontal: layout.screenPadding, paddingTop: 24, gap: 12 },
-  resendRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 4 },
-  legal: { paddingTop: 8 },
+  body: { paddingHorizontal: layout.screenPadding, paddingTop: 24, gap: 16, alignItems: 'center' },
+  footer: { paddingHorizontal: layout.screenPadding * 2, paddingVertical: 12 },
+  link: { textDecorationLine: 'underline' },
 });

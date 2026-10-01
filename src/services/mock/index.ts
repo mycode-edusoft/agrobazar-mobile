@@ -288,7 +288,8 @@ export const mockApi: Api = {
       const slice = items.slice(start, start + pageSize).map(summary);
       return { items: slice, total: items.length, page, hasMore: start + pageSize < items.length };
     },
-    async premium(categoryId) {
+    async premium(filter) {
+      const categoryId = filter?.categoryId;
       await delay(200);
       const t = Date.now();
       return state.listings

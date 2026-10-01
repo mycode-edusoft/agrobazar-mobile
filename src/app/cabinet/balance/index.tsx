@@ -11,6 +11,7 @@ import { api } from '@/services';
 import { useAuthStore } from '@/store/auth';
 import { colors, layout, radii } from '@/theme';
 import type { Transaction } from '@/types/domain';
+import { Icon } from '@/components/icons/Icon';
 
 export default function BalanceScreen() {
   const router = useRouter();
@@ -42,7 +43,7 @@ export default function BalanceScreen() {
           <Card style={styles.balanceCard}>
             <View style={styles.balanceRow}>
               <View style={styles.bankIcon}>
-                <Ionicons name="card-outline" size={28} color={colors.primary} />
+                <Icon name="bankCard" size={28} color={colors.primary} />
               </View>
               <AppText variant="balance" style={styles.flex}>
                 {formatAmount(user?.balance ?? 0)}
