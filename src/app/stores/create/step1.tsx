@@ -55,7 +55,8 @@ export default function CreateStoreStep1() {
         </FooterBar>
       }
     >
-      {/* Figma "Düzəliş et 1/3": qaydalar akkordeonu (kənarlardan 10), başlıq + 1/3, ağ kartda bölmələr */}
+      {/* Figma "Mağaza yarat / Düzəliş et 1/3": qaydalar akkordeonu (kənarlardan 10), başlıq + 1/3, ağ kartda bölmələr.
+          Cover şəkil Figma-da yoxdur — redaktədə mövcud cover draft-da saxlanılır, toxunulmur. */}
       <View style={styles.body}>
         <View style={styles.promo}>
           <RulesAccordion />
@@ -74,19 +75,16 @@ export default function CreateStoreStep1() {
             <Field
               value={draft.description}
               onChangeText={(v) => set({ description: v })}
-              placeholder={t.createListing.descriptionPlaceholder}
+              placeholder={t.createStore.descriptionPlaceholder}
               multiline
               error={touched && draft.description.trim().length < 10 ? t.auth.required : undefined}
             />
           </Section>
           <Section title={t.createStore.category}>
-            <SelectField value={category?.name ?? ''} placeholder={t.common.select} onPress={() => setSheet(true)} />
+            <SelectField value={category?.name ?? ''} placeholder={t.createStore.categoryPlaceholder} onPress={() => setSheet(true)} />
           </Section>
           <Section title={t.createStore.logo}>
             <ImageField uri={draft.logoUri} onChange={(logoUri) => set({ logoUri })} hint={t.createStore.logoHint} maxBytes={STORE_DEFAULTS.maxImageBytes} />
-          </Section>
-          <Section title={t.createStore.cover}>
-            <ImageField uri={draft.coverUri} onChange={(coverUri) => set({ coverUri })} hint={t.createStore.logoHint} maxBytes={STORE_DEFAULTS.maxImageBytes} wide />
           </Section>
         </FormCard>
       </View>

@@ -1,9 +1,10 @@
-// AVTOMATİK YARADILIB — mənbə: aqrobazar.com/qaydalar (2026-10-03). Mətni əl ilə redaktə etməyin;
-// sayt yenilənəndə yenidən çıxarın. Sətirlər: "– " — siyahı bəndi, "## " — bölmə daxilində alt başlıq, boş sətir — yeni paraqraf.
+// Statik hüquqi mətnlər — mənbə: web reposu `aqrobazar-frontend-dashboard/src/components/legal/*.tsx`
+// (aqrobazar.com/qaydalar həmin komponentlərdən qurulur; 2026-10-03 tarixində sözbəsöz tutuşdurulub).
+// Web-də mətn dəyişəndə buranı da yeniləyin. Sətirlər: "– " — siyahı bəndi, "## " — bölmə daxilində alt başlıq, boş sətir — yeni paraqraf.
 import type { LegalDocument } from './legal';
 
 export const webLegalDocuments = {
-  // https://aqrobazar.com/qaydalar/istifadeci-razilasmasi
+  // UserAgreementPageContent.tsx — aqrobazar.com/qaydalar/istifadeci-razilasmasi
   agreement: {
     title: "İstifadəçi Razılaşması",
     intro: "Redaksiya nömrəsi: № 1.0\nDərc olunma tarixi: 18.05.2026\nQüvvəyə minmə tarixi: 18.05.2026\n\nBu İstifadəçi Razılaşması (bundan sonra — “Razılaşma”) “AQROBAZAR” Məhdud Məsuliyyətli Cəmiyyəti (VÖEN: 3105691301) tərəfindən idarə olunan, aqrobazar.com domenində fəaliyyət göstərən Aqrobazar onlayn platformasından istifadə qaydalarını və tərəflərin hüquq və öhdəliklərini müəyyən edir.\nPlatformadan istifadə etməklə, qeydiyyatdan keçməklə, elan yerləşdirməklə və ya Platformanın hər hansı funksionallığından istifadə etməklə İstifadəçi:\n– bu Razılaşmanı oxuduğunu;\n– şərtləri başa düşdüyünü;\n– tam və qeyd-şərtsiz qəbul etdiyini təsdiq edir.\nBu Razılaşma Azərbaycan Respublikasının qanunvericiliyinə uyğun olaraq elektron müqavilə qüvvəsinə malikdir.",
@@ -26,7 +27,7 @@ export const webLegalDocuments = {
       { title: "16. Əlaqə məlumatları", body: "Şirkət adı: “AQROBAZAR” Məhdud Məsuliyyətli Cəmiyyəti\nVÖEN: 3105691301\nHüquqi ünvan: AZ0121, Azərbaycan Respublikası, Abşeron rayonu, Novxanı, Saray Bağlar Massivi, ev 3140 E\nElektron poçt: info@aqrobazar.com" },
     ],
   },
-  // https://aqrobazar.com/elan-qaydalari
+  // ListingPlacementRulesContent.tsx — aqrobazar.com/elan-qaydalari
   listing: {
     title: "Aqrobazar Elan Yerləşdirmə Qaydaları",
     intro: "Redaksiya nömrəsi: № 1.0\nDərc olunma tarixi: 18.05.2026\nQüvvəyə minmə tarixi: 18.05.2026\n\nBu sənəd Aqrobazar platformasında elan yerləşdirilməsi qaydalarını müəyyən edir və “AQROBAZAR” MMC tərəfindən idarə olunur.\nPlatformada elan yerləşdirməklə İstifadəçi bu Qaydaların bütün müddəalarını qəbul etdiyini təsdiq edir.\nBu Qaydalar Aqrobazar İstifadəçi Razılaşmasının ayrılmaz hissəsidir.",
@@ -47,7 +48,7 @@ export const webLegalDocuments = {
       { title: "14. Şikayət və appeal prosesi", body: "14.1. İstifadəçilər elanlarla bağlı şikayət göndərə bilərlər.\n14.2. Administrasiya şikayətləri yoxlamaq hüququna malikdir.\n14.3. İstifadəçi moderasiya qərarı ilə bağlı appeal müraciəti göndərə bilər.\n14.4. Administrasiya appeal nəticəsində:\n– qərarı qüvvədə saxlaya;\n– dəyişdirə;\n– elanı bərpa edə bilər.\n14.5. Administrasiyanın yekun qərarı son hesab edilir." },
     ],
   },
-  // https://aqrobazar.com/odenisli-xidmetler
+  // PaidServicesOverviewContent.tsx — aqrobazar.com/odenisli-xidmetler
   paid: {
     title: "Ödənişli Xidmətlər",
     intro: "Aqrobazar platformasında istifadəçilər elanlarının daha çox potensial alıcıya çatması üçün müxtəlif ödənişli irəlilətmə xidmətlərindən istifadə edə bilərlər.\nÖdənişli xidmətlər elanların görünürlüyünü artırmağa kömək edir, lakin satış, sifariş, müraciət və ya nəticə ilə bağlı hər hansı zəmanət vermir.",
@@ -58,7 +59,7 @@ export const webLegalDocuments = {
       { title: "Tövsiyə", body: "Saytda yerləşdirilən bütün elanlar moderasiyadan keçirilir və bu proses müəyyən vaxt tələb edə bilər.\nÖdənişli xidmətlərdən istifadə etməzdən əvvəl elan yerləşdirmə qaydaları ilə tanış olmağınız tövsiyə olunur." },
     ],
   },
-  // https://aqrobazar.com/odenish-ve-geri-qaytarma-siyaseti
+  // PaymentRefundPolicyContent.tsx — aqrobazar.com/odenish-ve-geri-qaytarma-siyaseti
   refund: {
     title: "Ödəniş və Vəsaitin Geri Qaytarılması Siyasəti",
     intro: "Redaksiya nömrəsi: № 1.0\nDərc olunma tarixi: 19.05.2026\nQüvvəyə minmə tarixi: 19.05.2026\n\nBu Ödəniş və Vəsaitin Geri Qaytarılması Siyasəti Aqrobazar platformasında təqdim olunan ödənişli xidmətlərdən istifadə zamanı tətbiq olunan ödəniş, balans, geri qaytarılma və maliyyə əməliyyatları qaydalarını müəyyən edir.\nPlatformadan istifadə etməklə istifadəçi bu siyasətin şərtləri ilə razılaşmış hesab olunur.",
@@ -76,7 +77,7 @@ export const webLegalDocuments = {
       { title: "11. Əlaqə", body: "Ödəniş və vəsaitin geri qaytarılması ilə bağlı suallar yarandıqda istifadəçi platformada göstərilən rəsmi əlaqə vasitələri üzərindən Aqrobazar dəstək xidməti ilə əlaqə saxlaya bilər." },
     ],
   },
-  // https://aqrobazar.com/mexfilik-ve-cerez-siyaseti
+  // PrivacyCookiePolicyContent.tsx — aqrobazar.com/mexfilik-ve-cerez-siyaseti
   privacy: {
     title: "Məxfilik və Cookie Siyasəti",
     intro: "Redaksiya nömrəsi: № 1.0\nDərc olunma tarixi: 19.05.2026\nQüvvəyə minmə tarixi: 19.05.2026\n\nBu Məxfilik və Cookie Siyasəti Aqrobazar platformasından istifadə zamanı istifadəçilərin şəxsi məlumatlarının toplanması, işlənməsi, saxlanması və qorunması qaydalarını müəyyən edir.\nPlatformadan istifadə etməklə istifadəçi bu siyasətin şərtləri ilə razılaşmış hesab olunur.",
@@ -98,7 +99,7 @@ export const webLegalDocuments = {
       { title: "15. Əlaqə", body: "Məxfilik və şəxsi məlumatların emalı ilə bağlı suallar yarandıqda istifadəçi platformada göstərilən rəsmi əlaqə vasitələri üzərindən Aqrobazar dəstək xidməti ilə əlaqə saxlaya bilər." },
     ],
   },
-  // https://aqrobazar.com/qadagan-mehsullar-ve-xidmetler-siyaseti
+  // ProhibitedProductsPolicyContent.tsx — aqrobazar.com/qadagan-mehsullar-ve-xidmetler-siyaseti
   prohibited: {
     title: "Qadağan Məhsullar və Xidmətlər Siyasəti",
     intro: "Redaksiya nömrəsi: № 1.0\nDərc olunma tarixi: 19.05.2026\nQüvvəyə minmə tarixi: 19.05.2026\n\nBu Qadağan Məhsullar və Xidmətlər Siyasəti Aqrobazar platformasında yerləşdirilməsi, satışı, reklamı və ya təşviqi qadağan olunan məhsul, xidmət və məzmun kateqoriyalarını müəyyən edir.\nPlatformadan istifadə etməklə istifadəçi bu siyasətin şərtləri ilə razılaşmış hesab olunur.",
@@ -122,7 +123,7 @@ export const webLegalDocuments = {
       { title: "17. Əlaqə", body: "Bu siyasətlə bağlı suallar yarandıqda istifadəçilər platformada göstərilən rəsmi əlaqə vasitələri üzərindən Aqrobazar dəstək xidməti ilə əlaqə saxlaya bilərlər." },
     ],
   },
-  // https://aqrobazar.com/biznes-hesab-qaydalari
+  // BusinessAccountRulesContent.tsx — aqrobazar.com/biznes-hesab-qaydalari
   business: {
     title: "Biznes Hesab Qaydaları",
     intro: "Redaksiya nömrəsi: № 1.0\nDərc olunma tarixi: 19.05.2026\nQüvvəyə minmə tarixi: 19.05.2026\n\nBu Biznes Hesab Qaydaları Aqrobazar platformasında biznes və korporativ istifadəçilər üçün tətbiq olunan istifadə, yerləşdirmə, reklam və kommersiya fəaliyyətləri ilə bağlı qaydaları müəyyən edir.\nBiznes hesabdan istifadə etməklə istifadəçi bu qaydalarla razılaşmış hesab olunur.",
@@ -145,7 +146,7 @@ export const webLegalDocuments = {
       { title: "16. Əlaqə", body: "Bu qaydalarla bağlı suallar yarandıqda istifadəçilər platformada göstərilən rəsmi əlaqə vasitələri üzərindən Aqrobazar dəstək xidməti ilə əlaqə saxlaya bilərlər." },
     ],
   },
-  // https://aqrobazar.com/mubahise-ve-saxtakarliqla-mubarize-siyaseti
+  // DisputeAntiFraudPolicyContent.tsx — aqrobazar.com/mubahise-ve-saxtakarliqla-mubarize-siyaseti
   disputes: {
     title: "Mübahisə və Saxtakarlıqla Mübarizə Siyasəti",
     intro: "Redaksiya nömrəsi: № 1.0\nDərc olunma tarixi: 19.05.2026\nQüvvəyə minmə tarixi: 19.05.2026\n\nBu Mübahisə və Saxtakarlıqla Mübarizə Siyasəti Aqrobazar platformasında istifadəçilər arasında yarana biləcək mübahisələrin idarə olunması, saxtakarlıq hallarının qarşısının alınması və platforma təhlükəsizliyinin qorunması məqsədilə tətbiq olunan qaydaları müəyyən edir.\nPlatformadan istifadə etməklə istifadəçi bu siyasətin şərtləri ilə razılaşmış hesab olunur.",

@@ -79,8 +79,8 @@ export default function CreateStoreStep2() {
                   <Switch value={day.enabled} onChange={(enabled) => patchDay(i, { enabled })} />
                 </View>
                 <View style={styles.times}>
-                  <SelectField value={spaced(day.open)} faded={!day.enabled} onPress={() => setPicker({ day: i, field: 'open' })} style={styles.flex} />
-                  <SelectField value={spaced(day.close)} faded={!day.enabled} onPress={() => setPicker({ day: i, field: 'close' })} style={styles.flex} />
+                  <SelectField value={spaced(day.open)} faded={!day.enabled} dropdown onPress={() => setPicker({ day: i, field: 'open' })} style={styles.flex} />
+                  <SelectField value={spaced(day.close)} faded={!day.enabled} dropdown onPress={() => setPicker({ day: i, field: 'close' })} style={styles.flex} />
                 </View>
               </View>
             ))}

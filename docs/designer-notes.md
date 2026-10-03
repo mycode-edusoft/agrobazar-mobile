@@ -138,7 +138,7 @@ Hər bənd üçün Figma bölməsi və mümkün olduqda node ID verilib.
 - **İllik qiymətdə üstündən xətt çəkilmiş məbləğ:** tətbiqdə 12 aylıq ödənişin cəmi götürülür, yəni illik endirimi göstərir. Backend ayrıca "köhnə qiymət" verərsə, o istifadə olunacaq.
 - **Aktiv tarif yenidən seçiləndə:** siyahıda aktiv tarifin adının yanında "Aktiv" yazılır və toxunanda "Aktiv tarifim" açılır, ödəniş səhifəsi yox. Dizaynda bu vəziyyət yoxdur.
 - **Başqa hesab tipinin tarifi:** ödəniş düyməsi deaktivdir, altında izah mətni var. Dizaynda yoxdur.
-- **Kabinet frame-ləri (Şəxsi kabinet / Platinum / Diamond):** üçündə də balans kartı oxlu variantdadır ("Balans artır" düyməsi yoxdur), avatarın küncündə tarif ikonu var, sağ yuxarıda tarif nişanı yoxdur. Bölmə 9-dakı açıq sual hələ cavabsızdır, tətbiqdə hələ düyməli variant qalır.
+- **Kabinet frame-ləri (Şəxsi kabinet / Platinum / Diamond):** üçündə də balans kartı oxlu variantdadır ("Balans artır" düyməsi yoxdur), avatarın küncündə tarif ikonu var, sağ yuxarıda tarif nişanı yoxdur. Tətbiq bu variantla uyğunlaşdırılıb (bax bölmə 16).
 
 ## 🟠 14. Balans (Balans, Balansı artırmaq)
 
@@ -154,11 +154,168 @@ Hər bənd üçün Figma bölməsi və mümkün olduqda node ID verilib.
 ## 🟠 15. Tənzimləmələr, Qaydalar, Hesabdan çıxış
 
 - **Qaydalar tabları və mətnlər:** sənədlər aqrobazar.com/qaydalar-dakı kimidir. Orada 8 sənəd var, eyni sıra və adlarla: İstifadəçi razılaşması, Elan yerləşdirmə qaydaları, Ödənişli xidmətlər, Ödəniş və geri ödəniş siyasəti, Məxfilik və cookie siyasəti, Qadağan məhsullar və xidmətlər siyasəti, Biznes hesab qaydaları, Mübahisə və saxtakarlıqla mübarizə siyasəti. Figma-nın "List Tab" qeydindəki 7 sənəddən fərqi: "Biznes hesab qaydaları" əlavə olunub, sonuncu sənədin adı saytdakı kimidir. Figma-nı sayta uyğunlaşdırmaq lazımdır.
-- **Mətnin mənbəyi:** mətnlər saytdan götürülüb və tətbiqə daxil edilib (`src/i18n/legalDocs.ts`). Sayt dəyişəndə tətbiqi də yeniləmək lazımdır. Backend-in `static-pages` endpoint-i hələ də yalnız SEO sahələrini qaytarır. Mətn ora köçürülsə, tətbiq onu birbaşa backend-dən oxuya bilər.
+- **Mətnin mənbəyi:** mətnlər statikdir və web reposundakı `src/components/legal/*.tsx` komponentlərindən götürülüb (tətbiqdə `src/i18n/legalDocs.ts`). Web-də mətn dəyişəndə tətbiqdəki mətni də yeniləmək lazımdır.
 - **"Qaydalar" sətri:** Tənzimləmələrdə "İstifadəçi razılaşması", "Qaydalar" və "Məxfilik siyasəti" ayrı sətirlərdir. Tətbiqdə üçü də Qaydalar ekranını açır, uyğun tab seçilmiş olur: "Qaydalar" sətri "Elan yerləşdirmə qaydaları" tabını açır.
 - **"Avtobəyan" kartı:** dizaynda gizlədilib, tətbiqdən də çıxarıldı. Tarifin avtomatik yenilənməsi "Aktiv tarifim" ekranındadır.
 - **İkonlar:** "Log out" frame-ində Bizimlə əlaqə, Tətbiq haqqında və Qaydalar sətirlərində eyni "Document shield" ikonu var. Bu, "Qaydalar" frame-indəki ikonlarla ziddiyyət təşkil edir. Tətbiqdə "Qaydalar" frame-indəki ikonlar götürülüb.
 
 ---
+
+
+## 🟠 16. Haqqımızda (Şəxsi kabinet → Tənzimləmələr → Haqqımızda)
+
+- **Axın:** üç frame bir yolu göstərir. Şəxsi kabinetdə sağ yuxarıdakı ⚙️ Tənzimləmələri açır, oradakı "Tətbiq haqqında" sətri isə Haqqımızda ekranını.
+- **Kabinet son variantı:** bu frame əsas götürülüb.
+  - Balans kartı oxludur, "Balans artır" düyməsi yoxdur. Balansı artırmaq Balans ekranındakı düymə ilədir.
+  - Tarif nişanı (20px) avatarın sağ alt küncündədir. Profil blokunun sağ yuxarısındakı tarif nişanı götürülüb.
+  - Aktiv tarif kartında boz kvadratın içində tarif ikonu var, tarif adı tarifin rəngindədir (#B1DF39).
+  - Bölmə 9-dakı "hansı variant əsasdır" sualı bununla bağlanır.
+- **Ad uyğunsuzluğu:** Tənzimləmələrdəki sətir "Tətbiq haqqında" adlanır, açılan ekranın başlığı isə "Haqqımızda"dır. Adlardan biri seçilməlidir. Tətbiqdə hələlik Figma-dakı kimi saxlanılıb.
+- **Haqqımızda:** başlıqlar nömrəlidir (1–3), mətn Figma-dakı kimi paraqraflara bölünüb.
+
+## 🟠 17. Yeni elan (Kateqoriya → alt kateqoriya → forma)
+
+- **Axın:** Kateqoriya siyahısı → alt kateqoriya ("Yeni elan" başlıqlı siyahı) → forma. Əvvəllər alt kateqoriyadan sonra ayrıca növ ekranı açılırdı. İndi Figma-dakı kimi birbaşa formaya keçilir, növ isə formadakı "Məhsul kateqoriyası" sahəsindən seçilir.
+- **Formadakı kateqoriya sahələri:**
+  - "Kateqoriya" sahəsində alt kateqoriya göstərilir (məs. İribuynuzlu heyvanlar), "Məhsul kateqoriyası"nda isə növ (məs. Buğa).
+  - Kateqoriya seçilməyibsə, "Məhsul kateqoriyası" boz və deaktiv görünür (boş forma frame-indəki kimi).
+- **Sahələrin sırası:** Kateqoriya, Məhsul kateqoriyası, növə görə əlavə sahələr (Cins və s.), Qiymət AZN, Bölgə, Xidmət, Elan başlığı, Məzmun, WhatsApp nömrəsi, şəkillər, razılıq.
+- **Çıxarılan sahələr:**
+  - "Əlaqə adı" sahəsi Figma formasında yoxdur, çıxarıldı. Backend-ə profil adı göndərilir.
+  - "Razılaşma yolu ilə" checkbox-u da yoxdur, çıxarıldı. "Təklif olunur" seçiləndə qiymət məcburi deyil; qiymət yazılmasa, elan "razılaşma yolu ilə" kimi göndərilir.
+- **Boş şəkil sahəsi:** tam enli kəsik xətli qutu, altında mavi yazı.
+  - Figma-dakı mətn ingiliscədir və başqa ekrandan kopyalanıb: "JPEG,PNG,WEBP to upload faktura here (max. 50 MB)".
+  - Tətbiqdə əvəzinə "Minimum 2, maksimum 8 şəkil (JPEG, PNG, WEBP)" yazılır; say limiti tarifdən gəlir.
+  - Düzgün mətni təsdiqləyin.
+- **Razılıq mətninin rəngi:** Figma-da #D9D9D9-dur, ağ fonda çox zəif oxunur. Hüquqi razılıq mətni olduğu üçün tətbiqdə #8C8C8C saxlanılıb.
+- **Sıfırla:** formanı kateqoriya daxil tamamilə təmizləyir (boş forma frame-indəki "Kateqoriya seç" vəziyyəti).
+- **"Filter" adlı frame:** Yeni elan bölməsindəki Bölgə paneli Filter ekranının üstündə çəkilib. Panel eyni komponentdir, formada da Bölgə sahəsindən açılır.
+
+## 🟠 18. Elan detalı (alıcı görünüşü) və İrəli çək / Premium / VIP
+
+- **Başqasının elanında irəli çəkmə düymələri:** "Details" frame-lərində ürək qırmızıdır, yəni elan başqasınındır. Amma "İrəli çək / Premium et / VIP et" düymələri yenə görünür. Backend bu xidmətləri yalnız elanın sahibinə satır (`listing_promotion_purchase`: `owner=profile`). Ona görə tətbiqdə düymələr yalnız sahibinə göstərilir. Başqasının elanını irəli çəkmək nəzərdə tutulursa, bu backend dəyişikliyi tələb edir.
+- **Kateqoriya sətirlərində qarışıqlıq:**
+  - Frame-də "Top kateqoriya: İribuynuzlu heyvanlar", "Kateqoriya: Heyvanlar" yazılıb, yəni səviyyələr tərsinədir. Tətbiqdə məntiqi sıra saxlanılıb: Top kateqoriya = Heyvanlar, Kateqoriya = İribuynuzlu heyvanlar.
+  - Başlığın altındakı "Buğa / İnək" yazısı tətbiqdə elanın başlığıdır.
+- **Ödəniş ekranları (Elanı irəli çək / Premium et / VIP et):**
+  - Figma-ya uyğunlaşdırıldı: ağ izah zolağı; boz fonda bonus kartı (Əvvəl / İndi), qırmızı "Bonus" lenti və ödənişin bitmə tarixi; müddət və ödəniş üsulu kartları.
+  - "Ödə" düyməsi və razılıq mətni ekranın altına bərkidilmir, məzmunun içində qalır. Razılıq mətnindəki "İstifadəçi razılaşmasını" və "Qaydaları" sözləri link oldu.
+- **Lentin mətni:** CSS-də "-10 %", ekran şəklində "Bonus" yazılıb. Tətbiqdə "Bonus" göstərilir. Endirim faizi nəzərdə tutulursa, backend-dən gəlməlidir.
+- **Pulsuz haqq:** tarifdə pulsuz irəli çəkmə / VIP / Premium haqqı qalıbsa, tətbiq "Ödəniş üsulu" kartı əvəzinə "bu əməliyyat pulsuzdur" kartını göstərir. Figma-da bu vəziyyət yoxdur, dizaynı lazımdır.
+
+## 🟠 19. Mağaza yarat (3 addım, xəritə, "Müraciətiniz qəbul edildi")
+
+**Tətbiqdə Figma-ya uyğunlaşdırılanlar:**
+- Addım 1: "Məzmun" sahəsinə "Üstünlükləri və vacib məqamları qeyd edin", "Məhsul kateqoriyası" sahəsinə "Kateqoriya seç" placeholder-i qoyuldu. Loqo seçilməyibsə tam enli 130px dropzone (fotoaparat ikonu) göstərilir, seçiləndən sonra 130×130 şəkil və "×" düyməsi.
+- Addım 1: "Cover şəkil" sahəsi çıxarıldı, çünki Figma-da yoxdur (bax: backend bəndləri).
+- Addım 3: link sahələrinin placeholder-i "Link" oldu, alt düymə "+ Mağaza yarat" oldu (redaktədə "Yadda saxla").
+- Uğur pəncərəsi: başlıq, xətt, boz izah mətni və tək yaşıl düymə. Yaşıl "✓" ikonu çıxarıldı.
+
+**Dizaynerdən cavab / düzəliş lazımdır:**
+- **"Contact Name" başlığı:** addımların başlığında (1/3 dairəsinin yanında) "Contact Name" yazılıb, bu şablondan qalıb. Tətbiqdə "Mağaza məlumatlarını tamamla" göstərilir. Hər addımın öz başlığı olacaqsa (məs. "Əsas məlumatlar / Ünvan və iş saatları / Əlaqə"), mətni verin.
+- **Qaydalar akkordeonu ("Mağazanı yarat və satışını artır!"):** "Düzəliş et" frame-lərində var, "Mağaza yarat" frame-lərində yoxdur. Tətbiqdə hər iki halda göstərilir, çünki qaydalar ən çox yaradılış zamanı lazımdır. Təsdiq edin.
+- **Uğur pəncərəsinin düyməsi və mətni:** CSS-də düymənin mətni yoxdur (eni ≈59px). Tətbiqdə "Anladım" yazılıb, bağlananda mağaza səhifəsinə keçir. İzah mətni də Figma-dan gəlmir, tətbiqdə "Mağazanız admin tərəfindən yoxlanıldıqdan sonra aktivləşəcək." yazılıb. Hər ikisini təsdiq edin.
+- **Yükləmə mətni:** Figma-da "JPEG,PNG,WEBP to upload faktura here (max. 50 MB)" yazılıb, yəni ingiliscə, "faktura" sözü səhvdir və limit 50 MB-dır. Tətbiqdə real limitlə "JPEG, PNG, WEBP yükləmək üçün toxunun (maks. 500 KB)" yazılıb.
+- **Mətn səhvləri:**
+  - "Ünvanı axil edin" yazılıb, düzgünü "Ünvanı daxil edin"dir (tətbiqdə düzəldilib).
+  - "Mağaza ünvanınıı təsdiqləyin" yazılıb, düzgünü "Mağaza ünvanını təsdiqləyin"dir.
+  - Xəritədə axtarış siyahısında ingiliscə "Can't find your address? / Use a map to do this instead" qalıb.
+- **Uyğunsuz etiketlər:**
+  - "Whatsapp nömrə" (frame 5–8) ilə "Whatsapp nömrəsi" (frame 9–12) fərqlidir; tətbiqdə "Whatsapp nömrəsi" yazılır.
+  - "Telefon nömrə" yazılıb, "Telefon nömrəsi" olmalıdır.
+  - "İş günləri və saatları" ilə "İş günləri və iş saatları" fərqlidir; tətbiqdə ikincisi yazılır.
+- **"İş saatları" (tək aralıq) frame-i:** bir frame-də yalnız iki "00 : 00" sahəsi var, digərində gün-gün qrafik (açar + iki saat) var. Tətbiqdə gün-gün variant işlənib. Tək aralıq ayrıca lazım deyilsə, frame silinsin.
+- **Gün sətirlərinin 4 fərqli düzümü:** addım 2-nin tam frame-ində (390×1076) hər gün başqa cür çəkilib:
+  1. B.e. / Ç.a.: 14px iki sətirli ad, açar və iki saat bir sətirdə;
+  2. Çərşənbə: 16px ad, açar və saatlar bir sətirdə;
+  3. Cümə axşamı: açar adın solunda, saatlar aşağıda;
+  4. Cümə / Şənbə: ad solda, açar sağda, saatlar aşağıda.
+
+  Tətbiqdə hamısı 4-cü variantla (Cümə) göstərilir: uzun adlar ("Çərşənbə axşamı") sığır, saat sahələri isə rahat toxunulacaq enə (155px) malik olur. Son variant hansıdır, təsdiq edin; frame-də yalnız biri saxlanılsın.
+- **Saat sahələrinin oxu:** Figma-da aşağı baxır (⌄), açılan seçicidir. Tətbiqdə də belə edildi; Bölgə sahəsində ox sağa baxır.
+- **"Ünvanı xəritədə seçmək" linki:** tam frame-də yaşıl Location ikonu ilə ünvan sahəsinin altında görünür. Xəritə hazır olana qədər tətbiqdə gizlidir (bax: aşağıdakı xəritə bəndi).
+- **Bağlı günün saatları:** açarı söndürülmüş gündə saat sahələri boz göstərilir, saat seçiləndə gün avtomatik aktiv olur. Figma-da bu vəziyyət göstərilməyib.
+
+**Xəritə ilə ünvan seçimi (frame 4–6) — hələ tətbiqdə yoxdur:**
+- "Ünvanı xəritədə seçmək" linki, xəritə, axtarış və "Təsdiqləmək və ünvanı əlavə et" pəncərəsi gizli saxlanılıb. Bunun üçün:
+  1. Native xəritə modulu (react-native-maps) və yeni APK build lazımdır, OTA ilə gəlmir.
+  2. Google Maps / Places API açarı (axtarış və ünvanın avtomatik doldurulması üçün) lazımdır. Açar kimin hesabında olacaq?
+  3. Backend-də koordinat sahələri lazımdır (aşağıda).
+- "Ünvanlarım" siyahısı (frame 6) istifadəçinin saxlanmış ünvanlarını göstərir. Belə bir model backend-də yoxdur. Bu hissə lazımdırsa, ayrıca endpoint tələb olunur.
+
+**Backend (`customers/models/store.py`) — tələb olunan dəyişikliklər:**
+- **Koordinatlar yoxdur:** Store modelində `latitude` / `longitude` sahəsi yoxdur. Xəritədə seçilən nöqtə saxlanıla bilməz, mağaza səhifəsində xəritə də göstərilə bilməz. Təklif: `latitude`, `longitude` (DecimalField 9,6, nullable).
+- **Məhsul kateqoriyası saxlanılmır:** modeldə kateqoriya sahəsi yoxdur. Formada seçilir, amma API-yə göndərilmir. Təklif: `category` FK (və ya bir neçə kateqoriya üçün M2M). Mağazaları kateqoriyaya görə filtrləmək üçün də lazımdır.
+- **İş qrafiki sərbəst mətndir:** `business_hours` 255 simvolluq CharField-dir. Tətbiq gün-gün qrafiki "Bazar ertəsi 09:00 - 18:00; …; Bazar bağlı" mətni kimi yazır və geri parse edir. Bu işləyir, amma kövrəkdir: web paneldə əl ilə yazılmış fərqli format oxunmaya bilər. Təklif: `business_hours` JSONField, məsələn `[{day:0, open:"09:00", close:"18:00", closed:false}, …]`, və ya ayrıca `StoreWorkingDay` cədvəli.
+- **Cover şəkil:** modeldə `cover_image` var, Figma formasında yoxdur. Tətbiq yeni mağazada cover göndərmir, redaktədə mövcud cover-a toxunmur. Mağaza səhifəsində cover göstərilirsə, onu yükləmək üçün haradasa sahə lazımdır. Ya formaya qaytarılsın, ya da backend-də istifadədən çıxarılsın.
+- **Loqo limiti:** frontend-də 500 KB, Figma-da 50 MB yazılıb. Backend-də ölçü/format validasiyası olub-olmadığı təsdiqlənməlidir; real limit bir yerdə müəyyən olunsun.
+- **Təsdiq axını:** `is_approved` / `approved_at` var, amma imtina səbəbi sahəsi yoxdur. Admin müraciəti rədd edərsə, istifadəçiyə səbəb göstərmək üçün `rejection_reason` və status (gözləmədə / təsdiqləndi / rədd edildi) lazımdır. Bildirişlərin endpoint-i də hələ yoxdur (bax: `docs/api-contract-notifications.md`).
+
+## 🟠 20. Mağazalar (siyahı, mağaza səhifəsi, iş qrafiki, xəritə)
+
+**Tətbiqdə Figma-ya uyğunlaşdırılanlar:**
+- Siyahı: ağ qutuda (100px, kölgə) mərkəzdə 124×61 loqo, altında fonsuz, sola düzlənmiş ad (12/24) və "N elan paylaşılıb - 👁 N". Kartlar arası 16.
+- Mağaza səhifəsi: cover yoxdursa, "Mağazalar" frame-indəki kimi ağ panel birbaşa başlıqdan sonra (yuxarıdan 32) başlayır. Əvvəl yaşıl yer tutucu göstərilirdi.
+- "İş qrafiki" sətrinə toxunanda aşağıdan pəncərə açılır: Bold 16 başlıq, "×", hər gün "Bazar ertəsi: 09:00 - 19:00" (Medium 14).
+- Ünvan sətrində yalnız ünvan göstərilir ("Koroğlu"), şəhər təkrarlanmır.
+- Mağazanın tək elanı varsa, kart iki sütunlu şəbəkədə yarım enlə göstərilir; əvvəl bütün eni tuturdu. Düzəliş bütün elan şəbəkələrinə aiddir.
+
+**Dizaynerdən cavab / düzəliş lazımdır:**
+- **Xəritə (frame "Mağazalar details", tam ekran xəritə):** səhifənin yuxarısında xəritə, tam ekranda isə yaşıl pin və loqolu mağaza çipi çəkilib. Tətbiqdə xəritə yoxdur, çünki mağazanın koordinatları saxlanılmır (bax: bölmə 19, backend). Hələlik cover şəkli varsa xəritənin yerində o göstərilir, yoxdursa xəritəsiz variant. Cover Figma-nın heç bir yerində yoxdur: ya xəritə gələndə tamamilə çıxarılsın, ya da dizaynda yeri göstərilsin.
+- **"Açııqdır" yazı səhvi:** düzgünü "Açıqdır"dır (tətbiqdə düzgün yazılır). Mağaza bağlı olanda "Bağlıdır" (qırmızı) göstərilir; bu vəziyyət Figma-da yoxdur.
+- **İş qrafiki pəncərəsi:**
+  - Bağlı gün necə yazılmalıdır? Tətbiqdə "Şənbə: Bağlı" yazılır.
+  - Tətbiqdə bu gün yaşıl rənglə seçilir. Figma-da bu yoxdur, təsdiq edin.
+- **Başlığın sağ küncü:** Figma-da boşdur. Tətbiqdə başqasının mağazasında ürək (seçdiklərimə əlavə), öz mağazanda redaktə ikonu var. Seçdiklərimdə "Mağazalar" tabı olduğu üçün ürək lazımdır, onun yeri dizaynda göstərilsin.
+- **"Daha çox":** uzun təsvir 4 sətirdən sonra kəsilir və "Daha çox" ilə açılır. Figma-da mətn qısadır, bu vəziyyət çəkilməyib.
+- **Mağazanın elanlarında yaşıl düymə:** "Mağazalar" frame-ində elan kartlarının sol alt küncündə VIP/Premium tacı əvəzinə yaşıl mağaza ikonu var. Bu nə bildirir (mağaza elanı nişanı)? Hər mağaza elanında göstərilməlidirmi, yoxsa VIP/Premium ilə necə birləşir? Hələlik tətbiqdə adi elan nişanları qalır.
+- **Siyahıda loqo:** Figma-da loqo 124×61 (enli) çəkilib. Mağazaların əksəriyyəti kvadrat loqo yükləyir (formada 1:1 kəsilir). Kvadrat loqo qutuda kiçik görünür; loqonun nisbəti bir yerdə müəyyən olunsun.
+
+## 🟠 21. Bizimlə əlaqə (Tənzimləmələr → Bizimlə əlaqə → forma → bildiriş)
+
+**Tətbiqdə Figma-ya uyğunlaşdırılanlar:**
+- Başlıq mətni əlavə olundu: "Sualın, təklifin və ya əməkdaşlıq istəyin varsa bizimlə əlaqə saxla" (Medium 18/25, mərkəzdə).
+- Əlaqə kartında sətirlər arasında xətt var; etiketlər 12/22 #8C8C8C, dəyərlər Medium 14/22. Ünvan ikonu dolu yaşıl pin oldu.
+- Sosial kartların sırası Figma-dakı kimidir: Facebook, TikTok, Instagram.
+- Alt düymə "Yazın" əvəzinə "Bizimlə əlaqə" yazır.
+- Forma: "Ad, Soyad", **Email** (yeni), "Mobil nömrə", "Mesajınızı daxil edin" (209px), "Ləğv et" və "Göndər". Doldurulmuş sahədə etiket sahənin içində, yuxarıda kiçik göstərilir.
+- Göndərişdən sonra Figma-dakı "Alert" kimi yuxarıda ağ bildiriş çıxır: yaşıl ✓ və "Mesajınız uğurla qəbul edildi".
+- Tənzimləmələr ekranı frame-ə artıq uyğun idi, dəyişiklik edilmədi.
+
+**Backend:**
+- Əlaqə forması endpoint-i (`pages/contact-forms/create/`) email-i məcburi istəyir. Əvvəl formada email olmadığı üçün tətbiq telefondan düzəldilmiş saxta ünvan (`…@mobile.aqrobazar.com`) göndərirdi. İndi istifadəçinin daxil etdiyi real email göndərilir; giriş edilibsə, profildəki email avtomatik doldurulur.
+
+**Dizaynerdən cavab / düzəliş lazımdır:**
+- **Xəritə:** Figma-da əlaqə kartının altında ofisin xəritəsi (358×201) çəkilib. Tətbiqdə hələ yoxdur: statik xəritə şəkli üçün Google Static Maps açarı, ya da dizaynerin hazırladığı statik şəkil lazımdır. Ən sadə həll: dizayner xəritə şəklini export etsin, toxunanda telefonun xəritə tətbiqində ünvan açılsın.
+- **"Mobile nömrə" / "Mobil nömrə":** Figma-da "Mobile nömrə" yazılıb (ingilis-Azərbaycan qarışığı). Tətbiqdə "Mobil nömrə" yazılır.
+- **Etiketlərin uyğunsuzluğu:** boş formada "Ad, Soyad", dolu formada "Ad Soyad" (vergülsüz) yazılıb. Tətbiqdə "Ad, Soyad" saxlanılıb.
+- **+994 prefiksi:** Figma-da telefon sahəsində prefiks yoxdur, dəyər "+994552809869" kimi bütöv yazılıb. Tətbiqdə "+994" sabit prefiks kimi göstərilir, istifadəçi yalnız 9 rəqəm yazır; bu, səhv daxiletməni azaldır.
+- **"Contact Name":** başlıq mətni layının adı yenə şablondan qalıb ("Contact Name"); mətnin özü düzgündür. Bu, yalnız Figma-da səliqə üçün qeyddir.
+
+## 🟠 22. Bildirişlər (siyahı, sıralama, sürüşdürüb silmə, boş vəziyyət, detal)
+
+**Tətbiqdə Figma-ya uyğunlaşdırılanlar:**
+- Kart: radius 14, kölgə, 12×16. Solda 48px dairəvi #F5F5F5 qutuda yaşıl kontur ikon. Başlıq Bold 14/20 qara, mətn 14/20 #7C7C7C (2 sətir), saat SemiBold 12 #3D3D3D.
+- Oxunmamış bildiriş: ikonun sağ altında 10px #22C55E nöqtə (əvvəl ağ haşiyəli yaşıl idi).
+- Bölmə başlığı ("Bugün", tarix): SemiBold 14/24 #595959 və #ECEDF2 xətt.
+- Sürüşdürüb silmə: #E1260D qırmızı, 28px ağ zibil qutusu.
+- Sıralama pəncərəsi: #F5F5F5 çiplər (radius 8), seçilmiş çip yaşıl fonda ağ mətnlə, altda "Tətbiq et".
+- Boş vəziyyət: 58px boz söhbət ikonu, Bold 16 başlıq, 16/22 #797979 izah.
+- Başlıqsız (yalnız mətnli) bildiriş kartı da dəstəklənir.
+- Elana bağlı bildirişə toxunanda elan detalı açılır. Bağlı deyilsə, başlıqlı aşağıdan pəncərə və "Aydındır" düyməsi göstərilir.
+
+**Backend:** bildiriş endpoint-ləri hələ yoxdur, ekran mock data ilə işləyir. Tam müqavilə və bu frame-lərdən çıxan əlavələr `docs/api-contract-notifications.md`-dədir:
+- başlıqsız bildiriş;
+- read/unread süzgəci;
+- UTC tarixlər;
+- silinmiş elan üçün `listing_id: null`;
+- push token qeydiyyatı və push ayarının serverdə saxlanması.
+
+**Dizaynerdən cavab / düzəliş lazımdır:**
+- **İngiliscə mətnlər:** "Newest First", "Older First", "Read Notification", "Unread Notification", "No Notifications", "We'll let you know when there will be something to update you." Tətbiqdə müvafiq olaraq "Əvvəlcə yeni", "Əvvəlcə köhnə", "Oxunmuş", "Oxunmamış", "Bildiriş yoxdur", "Yeni bir şey olanda sizə xəbər verəcəyik." yazılır. Təsdiq edin və ya öz variantınızı verin.
+- **Nümunə mətn:** kartlarda "Today's the day. Your culinary adventure is almost there." şablon mətni qalıb. Real bildiriş mətnləri (elan təsdiqləndi / rədd edildi / VIP başladı / müddət bitir / balans artımı və s.) üçün dizaynda nümunə yoxdur, tətbiqdəki mətnlər `api-contract`-dakı hadisə siyahısına görə yazılıb.
+- **İkonlar:** Figma-da bütün bildirişlərdə eyni zəng ikonu var. Tətbiqdə növə görə fərqli ikonlar işlədilir: VIP üçün zəng, Premium üçün almaz, elan üçün sənəd, ödəniş üçün kart, sistem üçün "i". Hər növ üçün ikon dizaynı verilsə, onlar qoyular.
+- **Silmənin təsdiqi:** Figma-da sürüşdürüb silmədən sonra təsdiq pəncərəsi yoxdur. Tətbiqdə bildiriş dərhal silinir, geri qaytarma ("Geri al") yoxdur. Lazımdırsa, dizaynı verilsin.
+- **Sıralama ikonu:** başlıqda "Sırala" mətni gizlidir, yalnız ⇅ ikonu görünür. Tətbiqdə də belədir.
 
 *Bu sənəd dizayn uyğunluğu yoxlaması davam etdikcə yenilənəcək — hər ekran yoxlandıqca yeni bəndlər əlavə olunur.*

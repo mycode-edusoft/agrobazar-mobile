@@ -102,7 +102,13 @@ export default function CreateStoreStep3() {
       keyboard
       footer={
         <FooterBar>
-          <Button title={t.createStore.submit} onPress={submit} loading={submitting} />
+          {/* Figma: yaradılışda "+ Mağaza yarat", redaktədə "Yadda saxla" */}
+          <Button
+            title={editing ? t.common.save : t.createStore.submit}
+            icon={editing ? undefined : <Ionicons name="add" size={20} color={colors.surface} />}
+            onPress={submit}
+            loading={submitting}
+          />
         </FooterBar>
       }
     >
@@ -138,14 +144,14 @@ export default function CreateStoreStep3() {
               />
             </View>
           </Section>
-          <Section title={t.createStore.website}>{linkField('website', 'https://www...')}</Section>
+          <Section title={t.createStore.website}>{linkField('website', t.createStore.linkPlaceholder)}</Section>
           <View style={styles.pair}>
-            <Section title={t.createStore.youtube} style={styles.half}>{linkField('youtube', 'https://...')}</Section>
-            <Section title={t.createStore.facebook} style={styles.half}>{linkField('facebook', 'https://...')}</Section>
+            <Section title={t.createStore.youtube} style={styles.half}>{linkField('youtube', t.createStore.linkPlaceholder)}</Section>
+            <Section title={t.createStore.facebook} style={styles.half}>{linkField('facebook', t.createStore.linkPlaceholder)}</Section>
           </View>
           <View style={styles.pair}>
-            <Section title={t.createStore.instagram} style={styles.half}>{linkField('instagram', 'https://...')}</Section>
-            <Section title={t.createStore.tiktok} style={styles.half}>{linkField('tiktok', 'https://...')}</Section>
+            <Section title={t.createStore.instagram} style={styles.half}>{linkField('instagram', t.createStore.linkPlaceholder)}</Section>
+            <Section title={t.createStore.tiktok} style={styles.half}>{linkField('tiktok', t.createStore.linkPlaceholder)}</Section>
           </View>
           <View style={styles.agree}>
             <Checkbox
@@ -165,14 +171,10 @@ export default function CreateStoreStep3() {
         </FormCard>
       </View>
 
+      {/* Figma "Müraciətiniz qəbul edildi": mərkəzdə Bold 16 başlıq, xətt, 16/24 #8C8C8C mətn, tək yaşıl düymə */}
       <BottomSheet visible={doneId != null} onClose={finish} title={t.createStore.successTitle} dismissOnBackdrop={false}>
-        <View style={styles.success}>
-          <Ionicons name="checkmark-circle" size={56} color={colors.primary} />
-          <AppText variant="body" color={colors.textMuted} center>
-            {t.createStore.successHint}
-          </AppText>
-        </View>
-        <Button title={t.cabinet.myStore} onPress={finish} />
+        <AppText style={styles.successText}>{t.createStore.successHint}</AppText>
+        <Button title={t.createStore.successOk} onPress={finish} />
       </BottomSheet>
     </Screen>
   );
@@ -192,5 +194,5 @@ const styles = StyleSheet.create({
   agreeText: { flex: 1, ...typography.smallMedium, lineHeight: 20, color: colors.textMuted },
   agreeError: { color: colors.danger },
   agreeLink: { color: colors.primary, textDecorationLine: 'underline' },
-  success: { alignItems: 'center', gap: 12, paddingVertical: 8 },
+  successText: { ...typography.body, color: colors.textMuted },
 });

@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, radii } from '@/theme';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { colors, radii, typography } from '@/theme';
 import { AppText } from './AppText';
 import { useToast } from './Toast';
 
@@ -39,6 +39,18 @@ export function ImagesPicker({ uris, onChange, max, min, hint, maxBytes, error }
     onChange([...uris, ...accepted.map((a) => a.uri)].slice(0, max));
   };
 
+  // Figma "Yeni elan" boş forma: tam enli kəsik xətli qutu (130px) + altında mavi format yazısı
+  if (uris.length === 0) {
+    return (
+      <View style={styles.wrap}>
+        <Pressable onPress={pick} style={[styles.dropzone, !!error && styles.addError]} accessibilityRole="button">
+          <MaterialIcons name="add-a-photo" size={32} color="#959595" />
+        </Pressable>
+        {hint || error ? <AppText style={[styles.dropHint, !!error && { color: colors.danger }]}>{error ?? hint}</AppText> : null}
+      </View>
+    );
+  }
+
   return (
     <View style={styles.wrap}>
       <View style={styles.grid}>
@@ -52,7 +64,7 @@ export function ImagesPicker({ uris, onChange, max, min, hint, maxBytes, error }
         ))}
         {uris.length < max ? (
           <Pressable onPress={pick} style={[styles.thumb, styles.add, !!error && styles.addError]}>
-            <Ionicons name="camera-outline" size={26} color="#959595" />
+            <MaterialIcons name="add-a-photo" size={26} color="#959595" />
             <AppText variant="caption" color={colors.textMuted}>
               {uris.length}/{max}
             </AppText>
@@ -171,6 +183,11 @@ const styles = StyleSheet.create({
   thumbImg: { width: '100%', height: '100%', borderRadius: 13 },
   add: { alignItems: 'center', justifyContent: 'center', gap: 4, borderStyle: 'dashed', backgroundColor: '#EAEAEA' },
   addError: { borderColor: colors.danger },
+  dropzone: {
+    height: THUMB, borderRadius: 14, borderWidth: 1, borderStyle: 'dashed', borderColor: '#C4C4C4',
+    backgroundColor: '#EAEAEA', alignItems: 'center', justifyContent: 'center',
+  },
+  dropHint: { ...typography.body, lineHeight: 32, color: '#1977F2', textAlign: 'center', paddingHorizontal: 12 },
   remove: {
     position: 'absolute', top: -8, right: -8, width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: colors.surface,
     backgroundColor: 'rgba(0,0,0,0.54)', alignItems: 'center', justifyContent: 'center',

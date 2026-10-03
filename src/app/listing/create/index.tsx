@@ -47,8 +47,8 @@ export default function CreateListingCategoryScreen() {
   }
 
   return (
-    // Figma "Kataloq step 17": başlıq "Yeni elan", kateqoriya siyahısı → alt kateqoriya → növ → forma
-    <Screen header={<ScreenHeader title={t.createListing.title} />}>
+    // Figma "Yeni elan / Kataloq step 16": başlıq "Kateqoriya", kateqoriya siyahısı → alt kateqoriya → forma
+    <Screen header={<ScreenHeader title={t.filter.category} />}>
       <CategoryCardList
         categories={categories ?? []}
         onSelect={(item) => {

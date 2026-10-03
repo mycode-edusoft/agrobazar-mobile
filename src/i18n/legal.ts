@@ -1,18 +1,18 @@
-// Statik hüquqi mətnlər. Qaydalar sənədləri aqrobazar.com-dan götürülüb (legalDocs.ts).
+// Statik hüquqi mətnlər. Qaydalar sənədləri web reposundan götürülüb (legalDocs.ts).
 import { webLegalDocuments } from './legalDocs';
 
 export const aboutSections = [
   {
     title: '1. Layihə haqqında',
-    body: 'Aqrobazar layihəsi Azərbaycanda kənd təsərrüfatı məhsullarının alqı-satqısı üçün yaradılmış onlayn platformadır. Platforma fermerləri, istehsalçıları və alıcıları bir araya gətirərək məhsulların daha sürətli, şəffaf və rahat şəkildə təqdim olunmasına imkan yaradır. İstifadəçilər Aqrobazar vasitəsilə mövcud elanlara baxa, satıcılarla birbaşa əlaqə saxlaya və regionlar üzrə axtarış edə bilərlər.',
+    body: 'Aqrobazar layihəsi Azərbaycanda kənd təsərrüfatı məhsullarının alqı-satqısı üçün yaradılmış onlayn platformadır.\nPlatforma fermerləri, istehsalçıları və alıcıları bir araya gətirərək məhsulların daha sürətli, şəffaf və rahat şəkildə təqdim olunmasına imkan yaradır.\nİstifadəçilər Aqrobazar vasitəsilə mövcud elanlara baxa, satıcılarla birbaşa əlaqə saxlaya və regionlar üzrə axtarış edə bilərlər.',
   },
   {
-    title: 'Layihənin məqsədi',
-    body: 'Layihənin əsas məqsədi kənd təsərrüfatı bazarında rəqəmsal alətlərin tətbiqini gücləndirmək və məhsulların daha geniş auditoriyaya çatdırılmasına dəstək olmaqdır. Aqrobazar həm fərdi, həm də korporativ istifadəçilər üçün nəzərdə tutulub və bazar prosesini daha çevik idarə etməyə kömək edir.',
+    title: '2. Layihənin məqsədi',
+    body: 'Layihənin əsas məqsədi kənd təsərrüfatı bazarında rəqəmsal alətlərin tətbiqini gücləndirmək və məhsulların daha geniş auditoriyaya çatdırılmasına dəstək olmaqdır.\nAqrobazar həm fərdi, həm də korporativ istifadəçilər üçün nəzərdə tutulub və bazar prosesini daha çevik idarə etməyə kömək edir.',
   },
   {
-    title: 'Hüquqi məlumatlar',
-    body: 'Aqrobazar platforması "AQROBAZAR" MMC (VÖEN: 3105691301) tərəfindən idarə olunur və Azərbaycan Respublikasının qanunvericiliyinə uyğun fəaliyyət göstərir. Platformada göstərilən xidmətlər və təqdim olunan funksionallıqlar mövcud qanunvericiliyin tələblərinə uyğun şəkildə həyata keçirilir.',
+    title: '3. Hüquqi məlumatlar',
+    body: 'Aqrobazar platforması "AQROBAZAR" MMC (VÖEN: 3105691301) tərəfindən idarə olunur və Azərbaycan Respublikasının qanunvericiliyinə uyğun fəaliyyət göstərir.\nPlatformada göstərilən xidmətlər və təqdim olunan funksionallıqlar mövcud qanunvericiliyin tələblərinə uyğun şəkildə həyata keçirilir.',
   },
 ];
 

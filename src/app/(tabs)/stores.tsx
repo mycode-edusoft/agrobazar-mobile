@@ -30,7 +30,7 @@ export default function StoresScreen() {
         onRefresh={refetch}
         ListEmptyComponent={isLoading ? null : <EmptyState text={t.catalog.noResults} icon="storefront-outline" />}
         renderItem={({ item }) => (
-          <StoreCard id={item.id} name={item.name} logoUrl={item.logoUrl} activeListingsCount={item.activeListingsCount} />
+          <StoreCard id={item.id} name={item.name} logoUrl={item.logoUrl} activeListingsCount={item.activeListingsCount} totalViews={item.totalViews} />
         )}
       />
     </Screen>
@@ -39,6 +39,7 @@ export default function StoresScreen() {
 
 const styles = StyleSheet.create({
   search: { paddingHorizontal: layout.screenPadding, paddingVertical: 12, backgroundColor: colors.surface },
-  grid: { padding: layout.screenPadding, gap: layout.cardGap },
-  row: { gap: layout.cardGap },
+  // Figma: kartlar arası həm üfüqi, həm şaquli 16
+  grid: { padding: layout.screenPadding, gap: 16 },
+  row: { gap: 16 },
 });

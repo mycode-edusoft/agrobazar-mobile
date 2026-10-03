@@ -55,6 +55,7 @@ export default function CreateListingFormScreen() {
     const e: Record<string, string> = {};
     if (!draft.categoryId || !draft.subcategoryId) e.category = t.auth.required;
     if (subcategory && subcategory.subsubcategories.length > 0 && !draft.subsubId) e.subsub = t.auth.required;
+    // "Təklif olunur" elanında qiymət məcburi deyil (Figma-da ayrıca "Razılaşma yolu ilə" seçimi yoxdur)
     if (draft.type !== 'offer' && !draft.negotiable && !(Number(draft.price.replace(',', '.')) > 0)) e.price = t.auth.required;
     if (!draft.city) e.city = t.auth.required;
     if (draft.title.trim().length < 3) e.title = t.auth.required;
@@ -80,16 +81,19 @@ export default function CreateListingFormScreen() {
       const v = draft.fields[f.key];
       if (v) fields[f.key] = f.type === 'number' ? Number(v) : v;
     }
+    const priceValue = Number(draft.price.replace(',', '.'));
+    const hasPrice = priceValue > 0;
     const input = {
       categoryId: draft.categoryId!,
       subcategoryId: draft.subcategoryId!,
       subsubId: draft.subsubId,
       type: draft.type,
-      price: draft.negotiable || draft.type === 'offer' && !draft.price ? null : Number(draft.price.replace(',', '.')),
-      negotiable: draft.negotiable,
+      price: hasPrice ? priceValue : null,
+      negotiable: !hasPrice && (draft.type === 'offer' || draft.negotiable),
       city: draft.city,
       title: draft.title.trim(),
-      contactName: draft.contactName.trim() || null,
+      // Figma formasında "Əlaqə adı" sahəsi yoxdur — profil adı göndərilir
+      contactName: draft.contactName.trim() || user?.fullName || null,
       description: draft.description.trim(),
       whatsapp: normalizePhone(draft.whatsapp),
       images: draft.images,
@@ -153,7 +157,12 @@ export default function CreateListingFormScreen() {
         <ScreenHeader
           title={editingId ? t.listing.edit : t.createListing.title}
           rightText={t.common.reset}
-          onRightPress={() => set({ price: '', negotiable: false, city: '', title: '', contactName: '', description: '', whatsapp: '', images: [], videoUri: null, fields: {}, agreed: false })}
+          onRightPress={() =>
+            set({
+              categoryId: null, subcategoryId: null, subsubId: null, price: '', negotiable: false, city: '', title: '',
+              description: '', whatsapp: '', images: [], videoUri: null, fields: {}, agreed: false,
+            })
+          }
         />
       }
       scroll
@@ -177,19 +186,28 @@ export default function CreateListingFormScreen() {
           </AppText>
         ) : null}
         <FormCard>
+          {/* Figma: "Kateqoriya"da alt kateqoriya (İribuynuzlu heyvanlar), "Məhsul kateqoriyası"nda növ (Buğa) */}
           <Section title={t.filter.category}>
-            <SelectField value={category?.name ?? ''} placeholder={t.common.select} error={err('category')} onPress={() => router.dismissTo('/listing/create')} />
+            <SelectField
+              value={subcategory?.name ?? category?.name ?? ''}
+              placeholder={t.createListing.selectCategory}
+              error={err('category')}
+              onPress={() => router.dismissTo('/listing/create')}
+            />
           </Section>
-          {category ? (
-            <Section title={t.createListing.productCategory}>
-              <SelectField
-                value={subsub?.name ?? subcategory?.name ?? ''}
-                placeholder={t.common.select}
-                error={err('subsub')}
-                onPress={() => router.push({ pathname: '/catalog/sub/[categoryId]', params: { categoryId: category.id, mode: 'create' } })}
-              />
-            </Section>
-          ) : null}
+          <Section title={t.createListing.productCategory}>
+            <SelectField
+              value={subsub?.name ?? ''}
+              placeholder={t.createListing.selectCategory}
+              error={err('subsub')}
+              disabled={!subcategory || subcategory.subsubcategories.length === 0}
+              onPress={() =>
+                category &&
+                subcategory &&
+                router.push({ pathname: '/catalog/types', params: { categoryId: category.id, subcategoryId: subcategory.id, mode: 'create' } })
+              }
+            />
+          </Section>
 
           {fieldRows.map((row) =>
             row.length === 2 ? (
@@ -202,17 +220,6 @@ export default function CreateListingFormScreen() {
             ),
           )}
 
-          <Section title={t.createListing.service}>
-            <View style={styles.chips}>
-              {listingTypes.map((type) => (
-                <SelectChip key={type} label={t.listingType[type]} active={draft.type === type} onPress={() => set({ type, negotiable: type === 'offer' ? draft.negotiable : false })} />
-              ))}
-            </View>
-            {draft.type === 'offer' ? (
-              <Checkbox checked={draft.negotiable} onChange={(v) => set({ negotiable: v, price: v ? '' : draft.price })} label={t.common.negotiable} />
-            ) : null}
-          </Section>
-
           <Section title={t.filter.priceAzn}>
             <Field
               value={draft.price}
@@ -220,7 +227,6 @@ export default function CreateListingFormScreen() {
               keyboardType="decimal-pad"
               placeholder={t.createListing.pricePlaceholder}
               error={err('price')}
-              editable={!draft.negotiable}
             />
           </Section>
 
@@ -228,12 +234,16 @@ export default function CreateListingFormScreen() {
             <SelectField value={draft.city} placeholder={t.common.select} error={err('city')} onPress={() => setSheet('region')} />
           </Section>
 
-          <Section title={t.createListing.listingTitle}>
-            <Field value={draft.title} onChangeText={(v) => set({ title: v })} placeholder={t.common.enter} error={err('title')} maxLength={80} />
+          <Section title={t.createListing.service}>
+            <View style={styles.chips}>
+              {listingTypes.map((type) => (
+                <SelectChip key={type} label={t.listingType[type]} active={draft.type === type} onPress={() => set({ type })} />
+              ))}
+            </View>
           </Section>
 
-          <Section title={t.createListing.contactName}>
-            <Field value={draft.contactName} onChangeText={(v) => set({ contactName: v })} placeholder={t.common.enter} maxLength={80} />
+          <Section title={t.createListing.listingTitle}>
+            <Field value={draft.title} onChangeText={(v) => set({ title: v })} placeholder={t.common.enter} error={err('title')} maxLength={80} />
           </Section>
 
           <Section title={t.createListing.description}>
@@ -264,8 +274,8 @@ export default function CreateListingFormScreen() {
             </View>
           </Section>
 
-          {/* Figma: şəkillər kartın içində 24px kənar boşluqla */}
-          <View style={styles.images}>
+          {/* Figma: şəkillər kartın içində 24px, boş yükləmə qutusu isə 16px kənar boşluqla */}
+          <View style={[styles.images, draft.images.length === 0 && styles.imagesEmpty]}>
             <ImagesPicker uris={draft.images} onChange={(images) => set({ images })} min={imageLimit.min} max={imageLimit.max} hint={t.createListing.imagesHint(imageLimit.min, imageLimit.max)} error={err('images')} />
           </View>
 
@@ -318,6 +328,7 @@ const styles = StyleSheet.create({
   prefix: { width: 71, height: 56, borderRadius: 8, backgroundColor: colors.inputBackgroundEmpty, alignItems: 'center', justifyContent: 'center' },
   prefixText: { ...typography.body, color: colors.textPlaceholder },
   images: { paddingHorizontal: 24, gap: 12 },
+  imagesEmpty: { paddingHorizontal: 16 },
   agree: { paddingHorizontal: 16 },
   agreeText: { flex: 1, ...typography.smallMedium, lineHeight: 20, color: colors.textMuted },
   agreeError: { color: colors.danger },

@@ -167,7 +167,7 @@ export interface NotificationApi {
 }
 
 export interface ContactApi {
-  send(input: { name: string; phone: string; message: string }): Promise<void>;
+  send(input: { name: string; email: string; phone: string; message: string }): Promise<void>;
 }
 
 export interface Api {

@@ -41,8 +41,9 @@ export default function SubsubcategoryScreen() {
   const show = () => {
     if (forCreate) {
       if (!selected) return;
-      setListing({ subsubId: selected });
-      router.push('/listing/create/form');
+      // Formadakı "Məhsul kateqoriyası"ndan açılır — seçimdən sonra formaya qayıdılır
+      setListing({ subsubId: selected, fields: {} });
+      router.back();
       return;
     }
     if (forFilter) {
@@ -56,7 +57,7 @@ export default function SubsubcategoryScreen() {
 
   return (
     <Screen
-      header={<ScreenHeader title={category?.name ?? t.catalog.title} />}
+      header={<ScreenHeader title={forCreate ? t.createListing.productCategory : category?.name ?? t.catalog.title} />}
       footer={
         <FooterBar style={styles.footer}>
           <Button

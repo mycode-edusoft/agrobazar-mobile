@@ -31,7 +31,7 @@ export default function SubcategoryScreen() {
   }, [category, q]);
 
   return (
-    <Screen header={<ScreenHeader title={category?.name ?? t.catalog.title} />}>
+    <Screen header={<ScreenHeader title={forCreate ? t.createListing.title : category?.name ?? t.catalog.title} />}>
       <View style={styles.body}>
         <View style={styles.card}>
           <View style={styles.searchWrap}>
@@ -47,11 +47,10 @@ export default function SubcategoryScreen() {
                 style={styles.row}
                 onPress={() => {
                   const hasTypes = item.subsubcategories.length > 0;
+                  // Figma "Yeni elan": alt kateqoriyadan birbaşa formaya; növ formadakı "Məhsul kateqoriyası"ndan seçilir
                   if (forCreate) {
                     setSubcategory(item.id);
-                    return hasTypes
-                      ? router.push({ pathname: '/catalog/types', params: { categoryId, subcategoryId: item.id, mode: 'create' } })
-                      : router.push('/listing/create/form');
+                    return router.push('/listing/create/form');
                   }
                   if (!forFilter) return openSubcategoryFlow(router, categoryId, item.id, hasTypes);
                   patchDraft({ categoryId, subcategoryId: item.id, subsubIds: undefined });

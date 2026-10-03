@@ -25,10 +25,12 @@ export function ListingGrid({
   data, header, footer, empty, onEndReached, loadingMore, refreshing, onRefresh,
   selectable, selectedIds, onToggleSelect, contentContainerStyle, showType, onMenu,
 }: Props) {
+  // Tək saylı siyahıda son kart bütün eni tutmasın deyə yanına görünməz boş yuva qoyulur
+  const cells: (ListingSummary | null)[] = data.length % 2 ? [...data, null] : data;
   return (
     <FlatList
-      data={data}
-      keyExtractor={(i) => i.id}
+      data={cells}
+      keyExtractor={(i) => i?.id ?? 'spacer'}
       numColumns={2}
       columnWrapperStyle={styles.row}
       contentContainerStyle={[styles.content, contentContainerStyle]}
@@ -45,16 +47,20 @@ export function ListingGrid({
       refreshing={refreshing}
       onRefresh={onRefresh}
       showsVerticalScrollIndicator={false}
-      renderItem={({ item }) => (
-        <ListingCard
-          item={item}
-          selectable={selectable}
-          selected={selectedIds?.has(item.id)}
-          onToggleSelect={onToggleSelect}
-          showType={showType}
-          onMenu={onMenu}
-        />
-      )}
+      renderItem={({ item }) =>
+        item ? (
+          <ListingCard
+            item={item}
+            selectable={selectable}
+            selected={selectedIds?.has(item.id)}
+            onToggleSelect={onToggleSelect}
+            showType={showType}
+            onMenu={onMenu}
+          />
+        ) : (
+          <View style={styles.spacer} />
+        )
+      }
     />
   );
 }
@@ -77,6 +83,7 @@ export function ListingRow({ data }: { data: ListingSummary[] }) {
 }
 
 const styles = StyleSheet.create({
+  spacer: { flex: 1 },
   content: { paddingHorizontal: layout.screenPadding, paddingBottom: 24, gap: layout.cardGap },
   row: { gap: layout.cardGap },
   loader: { paddingVertical: 16 },

@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, TextInput, View, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import Svg, { Circle, Path } from 'react-native-svg';
@@ -55,15 +56,20 @@ export function Field({ error, left, link, multiline, style, value, ...rest }: F
 }
 
 export function SelectField({
-  value, placeholder, onPress, error, faded, style,
-}: { value: string; placeholder?: string; onPress(): void; error?: string; faded?: boolean; style?: StyleProp<ViewStyle> }) {
+  value, placeholder, onPress, error, faded, disabled, dropdown, style,
+}: {
+  value: string; placeholder?: string; onPress(): void; error?: string; faded?: boolean; disabled?: boolean;
+  /** Figma saat sahələri: ox aşağı baxır (açılan seçici) */
+  dropdown?: boolean;
+  style?: StyleProp<ViewStyle>;
+}) {
   return (
     <View style={[styles.fieldWrap, style]}>
-      <Pressable onPress={onPress} style={[styles.field, !!error && styles.fieldError]}>
-        <AppText style={[styles.input, !value && styles.placeholder, faded && styles.faded]} numberOfLines={1}>
+      <Pressable onPress={onPress} disabled={disabled} style={[styles.field, !!error && styles.fieldError]}>
+        <AppText style={[styles.input, !value && styles.placeholder, faded && styles.faded, disabled && styles.disabled]} numberOfLines={1}>
           {value || placeholder}
         </AppText>
-        <Icon name="chevron" direction="right" size={20} color={colors.textMuted} />
+        <Icon name="chevron" direction={dropdown ? 'down' : 'right'} size={20} color={disabled ? DISABLED : colors.textMuted} />
       </Pressable>
       {error ? <AppText style={styles.error}>{error}</AppText> : null}
     </View>
@@ -131,6 +137,9 @@ export function RulesAccordion() {
   );
 }
 
+// Figma "Yeni elan" boş forma: hələ seçilə bilməyən sahədə mətn və ox rgba(191,191,191,.7)
+const DISABLED = 'rgba(191, 191, 191, 0.7)';
+
 const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface, borderRadius: 14, paddingVertical: 16, gap: 24, ...shadows.card },
   section: { paddingHorizontal: 16, gap: 12 },
@@ -148,6 +157,7 @@ const styles = StyleSheet.create({
   link: { color: '#276EF1', textDecorationLine: 'underline' },
   placeholder: { color: colors.textPlaceholder },
   faded: { color: 'rgba(89, 89, 89, 0.5)' },
+  disabled: { color: DISABLED },
   error: { ...typography.captionMedium, color: colors.danger, paddingHorizontal: 16 },
 
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -166,18 +176,17 @@ const styles = StyleSheet.create({
   ruleText: { ...typography.small, lineHeight: 22, color: colors.textMuted },
 });
 
-// Figma "Mağaza loqosu": 130×130 (radius 14) şəkil, sağ üst küncdə 24px tünd "×",
+// Figma "Mağaza loqosu": boş halda tam enli 130px dropzone (#EAEAEA, qırıq #C4C4C4 haşiyə, add_a_photo),
+// seçiləndən sonra 130×130 (radius 14) şəkil, sağ üst küncdə 24px tünd "×";
 // altda mərkəzdə mavi 16/32 yükləmə mətni (toxunanda qalereya açılır)
 export function ImageField({
-  uri, onChange, hint, maxBytes, wide,
-}: { uri: string | null; onChange(uri: string | null): void; hint: string; maxBytes: number; wide?: boolean }) {
+  uri, onChange, hint, maxBytes,
+}: { uri: string | null; onChange(uri: string | null): void; hint: string; maxBytes: number }) {
   const toast = useToast();
   const pick = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) return;
-    const res = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'], allowsEditing: true, aspect: wide ? [16, 7] : [1, 1], quality: 0.8,
-    });
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.8 });
     if (res.canceled) return;
     const asset = res.assets[0];
     if (asset.fileSize != null && asset.fileSize > maxBytes) {
@@ -188,16 +197,20 @@ export function ImageField({
   };
   return (
     <View style={imageStyles.imageWrap}>
-      <View style={[imageStyles.imageBox, wide && imageStyles.imageWide]}>
-        <Pressable onPress={pick} style={imageStyles.imageInner}>
-          {uri ? <Image source={uri} style={imageStyles.imageFill} contentFit="cover" /> : <Icon name="plus" size={28} color={colors.textMuted} />}
-        </Pressable>
-        {uri ? (
+      {uri ? (
+        <View style={imageStyles.imageBox}>
+          <Pressable onPress={pick} style={imageStyles.imageInner}>
+            <Image source={uri} style={imageStyles.imageFill} contentFit="cover" />
+          </Pressable>
           <Pressable onPress={() => onChange(null)} style={imageStyles.imageRemove} hitSlop={8} accessibilityLabel={t.common.delete}>
             <Icon name="cancel" size={14} color={colors.surface} />
           </Pressable>
-        ) : null}
-      </View>
+        </View>
+      ) : (
+        <Pressable onPress={pick} style={imageStyles.dropzone} accessibilityRole="button" accessibilityLabel={hint}>
+          <MaterialIcons name="add-a-photo" size={32} color="#959595" />
+        </Pressable>
+      )}
       <Pressable onPress={pick}>
         <AppText style={imageStyles.imageHint}>{hint}</AppText>
       </Pressable>
@@ -208,10 +221,13 @@ export function ImageField({
 const imageStyles = StyleSheet.create({
   imageWrap: { gap: 8 },
   imageBox: { width: 130, height: 130 },
-  imageWide: { width: '100%', height: 140 },
   imageInner: {
     flex: 1, borderRadius: 14, overflow: 'hidden', backgroundColor: colors.inputBackgroundEmpty,
     alignItems: 'center', justifyContent: 'center',
+  },
+  dropzone: {
+    height: 130, borderRadius: 14, borderWidth: 1, borderStyle: 'dashed', borderColor: '#C4C4C4',
+    backgroundColor: '#EAEAEA', alignItems: 'center', justifyContent: 'center',
   },
   imageFill: { width: '100%', height: '100%' },
   imageRemove: {

@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { EditSquareIcon } from '@/components/icons/BadgeIcons';
 import { Icon } from '@/components/icons/Icon';
 import { ListingGrid } from '@/components/listing/ListingGrid';
-import { AppText, Card, IconButton, Screen, ScreenHeader } from '@/components/ui';
+import { AppText, BottomSheet, Card, IconButton, Screen, ScreenHeader } from '@/components/ui';
 import { t } from '@/i18n/az';
 import { formatDisplayPhone } from '@/lib/format';
 import { qk } from '@/lib/queries';
@@ -60,18 +60,14 @@ export default function StoreScreen() {
     { key: 'website', url: s.website, icon: 'globe-outline' as const },
   ].filter((x) => !!x.url);
 
+  // Figma "Mağazalar details" (xəritə üstdə, panel 24px radiusla onun üzərində) və "Mağazalar" (xəritəsiz, ağ panel
+  // birbaşa başlıqdan sonra). Koordinat hələ yoxdur — cover varsa xəritənin yerində o göstərilir, yoxdursa xəritəsiz variant.
   const header = (
     <View style={styles.headerBlock}>
-      {s.coverUrl ? (
-        <Image source={s.coverUrl} style={styles.cover} contentFit="cover" />
-      ) : (
-        <View style={[styles.cover, styles.coverEmpty]}>
-          <Ionicons name="storefront-outline" size={48} color={colors.primary} />
-        </View>
-      )}
+      {s.coverUrl ? <Image source={s.coverUrl} style={styles.cover} contentFit="cover" /> : null}
 
-      <View style={styles.sheet}>
-        <View style={styles.grabber} />
+      <View style={[styles.sheet, s.coverUrl ? styles.sheetOverCover : styles.sheetPlain]}>
+        {s.coverUrl ? <View style={styles.grabber} /> : null}
         {/* Loqo (42, haşiyə #D2D6DB) + ad Bold 16 + "N elan paylaşılıb · 👁 N" */}
         <View style={styles.identity}>
           <View style={styles.logo}>
@@ -142,7 +138,7 @@ export default function StoreScreen() {
           {week && today ? (
             <>
               <View style={styles.thinLine} />
-              <Pressable onPress={() => setWeekOpen((v) => !v)} style={styles.contactRow}>
+              <Pressable onPress={() => setWeekOpen(true)} style={styles.contactRow}>
                 <Ionicons name="time-outline" size={20} color={colors.textMuted} />
                 <AppText style={[styles.inlineText, { color: openNow ? OPEN_GREEN : colors.danger }]}>
                   {openNow ? t.stores.openNow : t.stores.closedNow}
@@ -151,20 +147,8 @@ export default function StoreScreen() {
                 <AppText style={[styles.inlineText, styles.muted, styles.shrink]} numberOfLines={1}>
                   {t.stores.schedule(today.enabled ? `${today.open} - ${today.close}` : t.stores.dayClosed)}
                 </AppText>
-                <Icon name="chevron" direction={weekOpen ? 'up' : 'down'} size={20} color={colors.textMuted} />
+                <Icon name="chevron" direction="down" size={20} color={colors.textMuted} />
               </Pressable>
-              {weekOpen ? (
-                <View style={styles.week}>
-                  {week.map((d, i) => (
-                    <View key={WEEK_DAYS[i]} style={styles.weekRow}>
-                      <AppText style={[styles.weekText, i === todayIndex() && styles.weekToday]}>{WEEK_DAYS[i]}</AppText>
-                      <AppText style={[styles.weekText, i === todayIndex() && styles.weekToday]}>
-                        {d.enabled ? `${d.open} - ${d.close}` : t.stores.dayClosed}
-                      </AppText>
-                    </View>
-                  ))}
-                </View>
-              ) : null}
             </>
           ) : null}
           {s.address || s.city ? (
@@ -172,7 +156,7 @@ export default function StoreScreen() {
               <View style={styles.thinLine} />
               <View style={styles.contactRow}>
                 <Ionicons name="location-outline" size={20} color={colors.textMuted} />
-                <AppText style={[styles.contactText, styles.address]}>{[s.city, s.address].filter(Boolean).join(', ')}</AppText>
+                <AppText style={[styles.contactText, styles.address]}>{s.address || s.city}</AppText>
               </View>
             </>
           ) : null}
@@ -205,6 +189,19 @@ export default function StoreScreen() {
       }
     >
       <ListingGrid data={listings.data ?? []} header={header} contentContainerStyle={styles.grid} />
+
+      {/* Figma "İş qrafiki": Bold 16 başlıq + "×", hər gün "Bazar ertəsi: 09:00 - 19:00" (Medium 14/22, aralıq 16) */}
+      {week ? (
+        <BottomSheet visible={weekOpen} onClose={() => setWeekOpen(false)} title={t.stores.weekTitle}>
+          <View style={styles.week}>
+            {week.map((d, i) => (
+              <AppText key={WEEK_DAYS[i]} style={[styles.weekText, i === todayIndex() && styles.weekToday]}>
+                {`${WEEK_DAYS[i]}: ${d.enabled ? `${d.open} - ${d.close}` : t.stores.dayClosed}`}
+              </AppText>
+            ))}
+          </View>
+        </BottomSheet>
+      ) : null}
     </Screen>
   );
 }
@@ -214,9 +211,11 @@ const styles = StyleSheet.create({
   loader: { marginTop: 80 },
   headerBlock: { marginHorizontal: -layout.screenPadding },
   cover: { width: '100%', height: 260 },
-  coverEmpty: { backgroundColor: colors.primaryTint, alignItems: 'center', justifyContent: 'center' },
-  // Figma: panel 24px radius, yuxarıda 77×5 #F5F5F5 tutacaq
-  sheet: { marginTop: -24, backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
+  sheet: { backgroundColor: colors.surface },
+  // Figma "Mağazalar details": panel 24px radius, yuxarıda 77×5 #F5F5F5 tutacaq
+  sheetOverCover: { marginTop: -24, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
+  // Figma "Mağazalar" (xəritəsiz): loqo bloku yuxarıdan 32
+  sheetPlain: { paddingTop: 32 },
   grabber: { alignSelf: 'center', width: 77, height: 5, borderRadius: 100, backgroundColor: colors.inputBackgroundEmpty, marginTop: 14, marginBottom: 14 },
   identity: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: layout.screenPadding },
   logo: {
@@ -248,10 +247,10 @@ const styles = StyleSheet.create({
   address: { fontFamily: typography.smallMedium.fontFamily },
   thinLine: { height: 1, backgroundColor: colors.divider },
   vLine: { width: 1, height: 18, backgroundColor: colors.divider, marginHorizontal: 4 },
-  week: { gap: 4, paddingLeft: 24 },
-  weekRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  weekText: { ...typography.small, lineHeight: 22, color: colors.textMuted },
-  weekToday: { color: colors.text, fontFamily: typography.smallMedium.fontFamily },
+  week: { gap: 16, paddingBottom: 8 },
+  weekText: { ...typography.smallMedium, lineHeight: 22, color: colors.text },
+  // Bu gün yaşılla seçilir (Figma-da yoxdur, qeyd edilib)
+  weekToday: { color: OPEN_GREEN },
   listingsTitle: { paddingHorizontal: layout.screenPadding, paddingTop: 32, paddingBottom: 12 },
   grid: { paddingTop: 0 },
 });

@@ -152,17 +152,11 @@ export const httpStores: StoreApi = {
 };
 
 export const httpContact: ContactApi = {
-  async send({ name, phone, message }) {
+  async send({ name, email, phone, message }) {
     await request('pages/contact-forms/create/', {
       method: 'POST',
       auth: false,
-      // email backend-də məcburidir, formada isə yoxdur — telefon əsaslı placeholder göndərilir
-      body: {
-        name,
-        phone_number: phone,
-        email: `${phone.replace(/\D/g, '')}@mobile.aqrobazar.com`,
-        message,
-      },
+      body: { name, phone_number: phone, email, message },
     });
   },
 };
