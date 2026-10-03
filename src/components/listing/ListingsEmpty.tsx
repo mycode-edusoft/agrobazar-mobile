@@ -15,14 +15,15 @@ function SkeletonCard() {
   );
 }
 
+// tall: Figma "Elanlarım" tam ekran vəziyyəti — rəsm 268×164 (1.47x), yuxarıdan 103, mətn 16/24
 export function ListingsEmpty({ text, style, tall }: { text: string; style?: StyleProp<ViewStyle>; tall?: boolean }) {
   return (
     <View style={[styles.wrap, tall && styles.tall, style]}>
-      <View style={styles.cards}>
+      <View style={[styles.cards, tall && styles.cardsLarge]}>
         <SkeletonCard />
         <SkeletonCard />
       </View>
-      <AppText variant="caption" color={colors.textPlaceholder} center style={styles.text}>
+      <AppText variant={tall ? 'body' : 'caption'} color={colors.textPlaceholder} center style={[styles.text, tall && styles.textLarge]}>
         {text}
       </AppText>
     </View>
@@ -41,7 +42,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...shadows.card,
   },
-  tall: { flex: 1, minHeight: 480 },
+  tall: { flex: 1, minHeight: 480, justifyContent: 'flex-start', paddingTop: 103 },
+  cardsLarge: { transform: [{ scale: 1.47 }], marginVertical: 26 },
+  textLarge: { marginTop: 16 },
   cards: { flexDirection: 'row', gap: 6 },
   card: { width: 88, backgroundColor: '#FAFAFA', borderRadius: 4, padding: 0, gap: 4, paddingBottom: 6, ...shadows.smallButton },
   image: { height: 56, backgroundColor: GRAY, borderTopLeftRadius: 4, borderTopRightRadius: 4 },

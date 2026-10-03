@@ -1,35 +1,44 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { StepHeader } from '@/components/store/StepHeader';
-import { AppText, Button, FooterBar, Input, Screen, ScreenHeader, SelectSheet } from '@/components/ui';
+import { RegionSheet } from '@/components/catalog/RegionSheet';
+import { Field, FormCard, Section, SelectField, StepTitle } from '@/components/store/FormKit';
+import { TimePicker } from '@/components/store/TimePicker';
+import { AppText, Button, FooterBar, Screen, ScreenHeader, Switch } from '@/components/ui';
 import { t } from '@/i18n/az';
 import { useCities } from '@/lib/queries';
+import { defaultWeek, WEEK_DAYS } from '@/lib/storeHours';
 import { useStoreDraft } from '@/store/storeDraft';
-import { colors, layout } from '@/theme';
-import { Icon } from '@/components/icons/Icon';
+import { layout, typography } from '@/theme';
 
-const hours = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, '0')}:00`);
-const hourOptions = hours.map((h) => ({ value: h, label: h }));
+// Saat sahəsində Figma kimi "09 : 00"
+const spaced = (v: string) => v.replace(':', ' : ');
 
+/** Figma "Düzəliş et 2/3": Bölgə, Mağaza ünvanı, gün-gün iş saatları (açar + açılış/bağlanış). */
 export default function CreateStoreStep2() {
   const router = useRouter();
   const { data: cities } = useCities();
-  const regionOptions = (cities ?? []).map((r) => ({ value: r, label: r }));
   const draft = useStoreDraft((s) => s.draft);
+  const editing = useStoreDraft((s) => s.editing);
   const set = useStoreDraft((s) => s.set);
-  const [sheet, setSheet] = useState<'region' | 'open' | 'close' | null>(null);
+  const [regionOpen, setRegionOpen] = useState(false);
+  const [picker, setPicker] = useState<{ day: number; field: 'open' | 'close' } | null>(null);
   const [touched, setTouched] = useState(false);
-  const valid = !!draft.city && draft.address.trim().length >= 3;
+  const valid = !!draft.city && draft.address.trim().length >= 3 && draft.week.some((d) => d.enabled);
 
-  const chevron = <Icon name="chevron" direction="down" size={20} color={colors.textMuted} />;
+  const patchDay = (day: number, patch: Partial<(typeof draft.week)[number]>) =>
+    set({ week: draft.week.map((d, i) => (i === day ? { ...d, ...patch } : d)) });
 
   return (
     <Screen
-      header={<ScreenHeader title={t.createStore.title} />}
+      header={
+        <ScreenHeader
+          title={editing ? t.createStore.editTitle : t.createStore.title}
+          rightText={t.common.reset}
+          onRightPress={() => set({ city: '', address: '', week: defaultWeek() })}
+        />
+      }
       scroll
-      padded
       keyboard
       footer={
         <FooterBar>
@@ -43,44 +52,65 @@ export default function CreateStoreStep2() {
         </FooterBar>
       }
     >
-      <StepHeader step={2} total={3} title={t.createStore.step2} />
-      <View style={styles.form}>
-        <AppText variant="bodyBold" color={colors.textSecondary}>
-          {t.createStore.region}
-        </AppText>
-        <Input label={t.createStore.region} value={draft.city} placeholder={t.common.select} onPressContainer={() => setSheet('region')} rightElement={chevron} error={touched && !draft.city ? t.auth.required : undefined} />
-        <AppText variant="bodyBold" color={colors.textSecondary}>
-          {t.createStore.address}
-        </AppText>
-        <Input
-          label={t.createStore.address}
-          value={draft.address}
-          onChangeText={(v) => set({ address: v })}
-          placeholder={t.createStore.addressPlaceholder}
-          leftIcon={<Ionicons name="location-outline" size={22} color={colors.textSecondary} />}
-          error={touched && draft.address.trim().length < 3 ? t.auth.required : undefined}
-        />
-        <AppText variant="bodyBold" color={colors.textSecondary}>
-          {t.createStore.workingHours}
-        </AppText>
-        <View style={styles.row}>
-          <View style={styles.flex}>
-            <Input label="Açılış" value={draft.open} onPressContainer={() => setSheet('open')} rightElement={chevron} />
-          </View>
-          <View style={styles.flex}>
-            <Input label="Bağlanış" value={draft.close} onPressContainer={() => setSheet('close')} rightElement={chevron} />
-          </View>
-        </View>
+      <View style={styles.body}>
+        <StepTitle step={2} />
+        <FormCard>
+          <Section title={t.createStore.region}>
+            <SelectField
+              value={draft.city}
+              placeholder={t.common.select}
+              onPress={() => setRegionOpen(true)}
+              error={touched && !draft.city ? t.auth.required : undefined}
+            />
+          </Section>
+          <Section title={t.createStore.address}>
+            <Field
+              value={draft.address}
+              onChangeText={(v) => set({ address: v })}
+              placeholder={t.createStore.addressPlaceholder}
+              error={touched && draft.address.trim().length < 3 ? t.auth.required : undefined}
+            />
+          </Section>
+          <Section title={t.createStore.workDays}>
+            {draft.week.map((day, i) => (
+              <View key={WEEK_DAYS[i]} style={styles.day}>
+                <View style={styles.dayRow}>
+                  <AppText style={styles.dayLabel}>{WEEK_DAYS[i]}</AppText>
+                  <Switch value={day.enabled} onChange={(enabled) => patchDay(i, { enabled })} />
+                </View>
+                <View style={styles.times}>
+                  <SelectField value={spaced(day.open)} faded={!day.enabled} onPress={() => setPicker({ day: i, field: 'open' })} style={styles.flex} />
+                  <SelectField value={spaced(day.close)} faded={!day.enabled} onPress={() => setPicker({ day: i, field: 'close' })} style={styles.flex} />
+                </View>
+              </View>
+            ))}
+          </Section>
+        </FormCard>
       </View>
-      <SelectSheet visible={sheet === 'region'} onClose={() => setSheet(null)} title={t.createStore.region} options={regionOptions} value={draft.city || null} onSelect={(v) => set({ city: v ?? '' })} searchable />
-      <SelectSheet visible={sheet === 'open'} onClose={() => setSheet(null)} title="Açılış" options={hourOptions} value={draft.open} onSelect={(v) => set({ open: v ?? '09:00' })} />
-      <SelectSheet visible={sheet === 'close'} onClose={() => setSheet(null)} title="Bağlanış" options={hourOptions} value={draft.close} onSelect={(v) => set({ close: v ?? '18:00' })} />
+
+      <RegionSheet
+        visible={regionOpen}
+        onClose={() => setRegionOpen(false)}
+        regions={cities ?? []}
+        value={draft.city || null}
+        onSelect={(city) => set({ city })}
+      />
+      <TimePicker
+        visible={picker != null}
+        value={picker ? draft.week[picker.day][picker.field] : '09:00'}
+        onClose={() => setPicker(null)}
+        onSelect={(v) => picker && patchDay(picker.day, { [picker.field]: v, enabled: true })}
+      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  form: { paddingTop: 16, gap: 12, paddingBottom: layout.screenPadding },
-  row: { flexDirection: 'row', gap: 8 },
+  body: { padding: layout.screenPadding, gap: 16 },
+  // Figma: hər gün bloku yuxarı-aşağı 8, sətirlə saatlar arası 8, iki saat arası 16
+  day: { paddingVertical: 8, gap: 8 },
+  dayRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  dayLabel: { flex: 1, ...typography.body, lineHeight: 22, color: 'rgba(0, 0, 0, 0.85)' },
+  times: { flexDirection: 'row', gap: 16 },
 });

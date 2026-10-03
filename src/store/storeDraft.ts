@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { defaultWeek, weekOf, type WeeklyHours } from '@/lib/storeHours';
 import type { Store } from '@/types/domain';
 
 export interface StoreDraft {
@@ -9,8 +10,7 @@ export interface StoreDraft {
   coverUri: string | null;
   city: string;
   address: string;
-  open: string;
-  close: string;
+  week: WeeklyHours;
   phone: string;
   whatsapp: string;
   website: string;
@@ -23,7 +23,7 @@ export interface StoreDraft {
 
 const empty: StoreDraft = {
   name: '', description: '', categoryId: null, logoUri: null, coverUri: null,
-  city: '', address: '', open: '09:00', close: '18:00',
+  city: '', address: '', week: defaultWeek(),
   phone: '', whatsapp: '', website: '', youtube: '', facebook: '', instagram: '', tiktok: '', agreed: false,
 };
 
@@ -47,7 +47,7 @@ export const useStoreDraft = create<State>((set) => ({
       draft: {
         name: store.name, description: store.description, categoryId: store.categoryId,
         logoUri: store.logoUrl, coverUri: store.coverUrl, city: store.city, address: store.address,
-        open: store.workingHours?.open ?? '09:00', close: store.workingHours?.close ?? '18:00',
+        week: weekOf(store) ?? defaultWeek(),
         phone: ownerLocalPhone, whatsapp: store.whatsapp.replace('+994', ''),
         website: store.website ?? '', youtube: store.youtube ?? '', facebook: store.facebook ?? '',
         instagram: store.instagram ?? '', tiktok: store.tiktok ?? '', agreed: true,

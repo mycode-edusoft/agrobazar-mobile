@@ -100,3 +100,36 @@ export function localDayKey(iso: string | Date): string {
   const dd = String(d.getDate()).padStart(2, '0');
   return `${d.getFullYear()}-${mm}-${dd}`;
 }
+
+/** Onluq vergüllə: 1015.846 → "1015,8" */
+export const formatDecimal = (n: number, digits = 1) => n.toFixed(digits).replace('.', ',');
+
+/** İşarəli: 12 → "+12", -4 → "-4", 0 → "0" */
+export const formatSigned = (n: number) => (n > 0 ? `+${n}` : String(n));
+
+/** Azərbaycan sıra sayı şəkilçisi: 1-ci, 3-cü, 6-cı, 9-cu */
+export function ordinal(n: number) {
+  const last = n % 10;
+  const tens = n % 100;
+  const key = last !== 0 ? last : tens !== 0 ? tens : 100;
+  const suffix: Record<number, string> = {
+    1: 'ci', 2: 'ci', 3: 'cü', 4: 'cü', 5: 'ci', 6: 'cı', 7: 'ci', 8: 'ci', 9: 'cu',
+    10: 'cu', 20: 'ci', 30: 'cu', 40: 'cı', 50: 'ci', 60: 'cı', 70: 'ci', 80: 'ci', 90: 'cı', 100: 'cü',
+  };
+  return `${n}-${suffix[key] ?? 'ci'}`;
+}
+
+/** Figma "Aktiv tarifim": "03 - 08 - 2026 20:29" */
+export function formatDateTimeDashed(iso: string): string {
+  const d = new Date(iso);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${p(d.getDate())} - ${p(d.getMonth() + 1)} - ${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+/** Figma tarixçə sətri: "15 iyun 2026 • 11:40" */
+export function formatTxTime(iso: string): string {
+  const d = new Date(iso);
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  return `${d.getDate()} ${AZ_MONTHS[d.getMonth()]} ${d.getFullYear()} • ${hh}:${mi}`;
+}

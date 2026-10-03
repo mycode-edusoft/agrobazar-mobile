@@ -1,17 +1,18 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { StepHeader } from '@/components/store/StepHeader';
-import { AppText, BottomSheet, Button, Checkbox, FooterBar, Input, Screen, ScreenHeader, useToast } from '@/components/ui';
+import { Icon } from '@/components/icons/Icon';
+import { Field, FormCard, Section, StepTitle } from '@/components/store/FormKit';
+import { AppText, BottomSheet, Button, Checkbox, FooterBar, Screen, ScreenHeader, useToast } from '@/components/ui';
 import { t } from '@/i18n/az';
 import { formatPhoneInput, isValidAzPhone, normalizePhone } from '@/lib/format';
 import { qk } from '@/lib/queries';
 import { api, ApiError } from '@/services';
 import { useAuthStore } from '@/store/auth';
 import { useStoreDraft } from '@/store/storeDraft';
-import { colors, layout } from '@/theme';
+import { colors, layout, typography } from '@/theme';
 
 const URL_RE = /^https?:\/\/\S+$/i;
 const opt = (v: string) => (v.trim() ? v.trim() : null);
@@ -29,7 +30,7 @@ export default function CreateStoreStep3() {
   const [submitting, setSubmitting] = useState(false);
   const [doneId, setDoneId] = useState<string | null>(null);
 
-  const linkError = (v: string) => (touched && v.trim() && !URL_RE.test(v.trim()) ? 'Link https:// ilə başlamalıdır' : undefined);
+  const linkError = (v: string) => (touched && v.trim() && !URL_RE.test(v.trim()) ? t.createStore.linkInvalid : undefined);
   const valid =
     isValidAzPhone(draft.phone) && isValidAzPhone(draft.whatsapp) && draft.agreed &&
     [draft.website, draft.youtube, draft.facebook, draft.instagram, draft.tiktok].every((v) => !v.trim() || URL_RE.test(v.trim()));
@@ -41,7 +42,8 @@ export default function CreateStoreStep3() {
     const input = {
       name: draft.name.trim(), description: draft.description.trim(), categoryId: draft.categoryId,
       logoUri: draft.logoUri, coverUri: draft.coverUri, city: draft.city, address: draft.address.trim(),
-      workingHours: { open: draft.open, close: draft.close },
+      workingHours: draft.week.find((d) => d.enabled) ?? null,
+      schedule: draft.week,
       phone: normalizePhone(draft.phone), whatsapp: normalizePhone(draft.whatsapp),
       website: opt(draft.website), youtube: opt(draft.youtube), facebook: opt(draft.facebook),
       instagram: opt(draft.instagram), tiktok: opt(draft.tiktok),
@@ -74,40 +76,93 @@ export default function CreateStoreStep3() {
     router.replace({ pathname: '/stores/[id]', params: { id } });
   };
 
-  const phoneIcon = <AppText variant="body" color={colors.textSecondary}>+994</AppText>;
+  const prefix = (
+    <View style={styles.prefix}>
+      <AppText style={styles.prefixText}>+994</AppText>
+    </View>
+  );
+  const phoneIcon = <Icon name="phone" size={24} color={colors.textSecondary} />;
+  const linkField = (key: 'website' | 'youtube' | 'facebook' | 'instagram' | 'tiktok', placeholder: string) => (
+    <Field
+      value={draft[key]}
+      onChangeText={(v) => set({ [key]: v })}
+      placeholder={placeholder}
+      keyboardType="url"
+      autoCapitalize="none"
+      link
+      numberOfLines={1}
+      error={linkError(draft[key])}
+    />
+  );
 
   return (
     <Screen
-      header={<ScreenHeader title={t.createStore.title} />}
+      header={<ScreenHeader title={editing ? t.createStore.editTitle : t.createStore.title} />}
       scroll
-      padded
       keyboard
       footer={
         <FooterBar>
-          <Button title={editing ? t.common.save : t.createStore.submit} onPress={submit} loading={submitting} />
+          <Button title={t.createStore.submit} onPress={submit} loading={submitting} />
         </FooterBar>
       }
     >
-      <StepHeader step={3} total={3} title={t.createStore.step3} />
-      <View style={styles.form}>
-        <Input label={t.createStore.phone} value={draft.phone} onChangeText={(v) => set({ phone: formatPhoneInput(v) })} keyboardType="phone-pad" placeholder={t.auth.phonePlaceholder} leftIcon={phoneIcon} error={touched && !isValidAzPhone(draft.phone) ? t.auth.required : undefined} />
-        <Input label={t.createStore.whatsapp} value={draft.whatsapp} onChangeText={(v) => set({ whatsapp: formatPhoneInput(v) })} keyboardType="phone-pad" placeholder={t.auth.phonePlaceholder} leftIcon={phoneIcon} error={touched && !isValidAzPhone(draft.whatsapp) ? t.auth.required : undefined} />
-        <Input label={t.createStore.website} value={draft.website} onChangeText={(v) => set({ website: v })} placeholder="https://www..." keyboardType="url" autoCapitalize="none" error={linkError(draft.website)} />
-        <Input label={t.createStore.youtube} value={draft.youtube} onChangeText={(v) => set({ youtube: v })} placeholder="https://www.youtube.com/..." keyboardType="url" autoCapitalize="none" error={linkError(draft.youtube)} />
-        <Input label={t.createStore.facebook} value={draft.facebook} onChangeText={(v) => set({ facebook: v })} placeholder="https://www.facebook.com/..." keyboardType="url" autoCapitalize="none" error={linkError(draft.facebook)} />
-        <Input label={t.createStore.instagram} value={draft.instagram} onChangeText={(v) => set({ instagram: v })} placeholder="https://www.instagram.com/..." keyboardType="url" autoCapitalize="none" error={linkError(draft.instagram)} />
-        <Input label={t.createStore.tiktok} value={draft.tiktok} onChangeText={(v) => set({ tiktok: v })} placeholder="https://www.tiktok.com/@..." keyboardType="url" autoCapitalize="none" error={linkError(draft.tiktok)} />
-        <Checkbox
-          checked={draft.agreed}
-          onChange={(v) => set({ agreed: v })}
-          label={
-            <Pressable onPress={() => router.push('/info/rules')} style={styles.flex}>
-              <AppText variant="small" color={touched && !draft.agreed ? colors.danger : colors.textSecondary}>
-                {t.createStore.agree}
-              </AppText>
-            </Pressable>
-          }
-        />
+      {/* Figma "Düzəliş et 3/3": nömrələr (+994 qutusu + telefon ikonlu sahə), linklər, razılıq */}
+      <View style={styles.body}>
+        <StepTitle step={3} />
+        <FormCard>
+          <Section title={t.createStore.phone}>
+            <View style={styles.phoneRow}>
+              {prefix}
+              <Field
+                style={styles.flex}
+                left={phoneIcon}
+                value={draft.phone}
+                onChangeText={(v) => set({ phone: formatPhoneInput(v) })}
+                keyboardType="phone-pad"
+                placeholder={t.auth.phonePlaceholder}
+                error={touched && !isValidAzPhone(draft.phone) ? t.auth.required : undefined}
+              />
+            </View>
+          </Section>
+          <Section title={t.createStore.whatsapp}>
+            <View style={styles.phoneRow}>
+              {prefix}
+              <Field
+                style={styles.flex}
+                left={phoneIcon}
+                value={draft.whatsapp}
+                onChangeText={(v) => set({ whatsapp: formatPhoneInput(v) })}
+                keyboardType="phone-pad"
+                placeholder={t.auth.phonePlaceholder}
+                error={touched && !isValidAzPhone(draft.whatsapp) ? t.auth.required : undefined}
+              />
+            </View>
+          </Section>
+          <Section title={t.createStore.website}>{linkField('website', 'https://www...')}</Section>
+          <View style={styles.pair}>
+            <Section title={t.createStore.youtube} style={styles.half}>{linkField('youtube', 'https://...')}</Section>
+            <Section title={t.createStore.facebook} style={styles.half}>{linkField('facebook', 'https://...')}</Section>
+          </View>
+          <View style={styles.pair}>
+            <Section title={t.createStore.instagram} style={styles.half}>{linkField('instagram', 'https://...')}</Section>
+            <Section title={t.createStore.tiktok} style={styles.half}>{linkField('tiktok', 'https://...')}</Section>
+          </View>
+          <View style={styles.agree}>
+            <Checkbox
+              checked={draft.agreed}
+              onChange={(v) => set({ agreed: v })}
+              label={
+                <AppText style={[styles.agreeText, touched && !draft.agreed && styles.agreeError]}>
+                  {t.createStore.agreePrefix}
+                  <AppText style={styles.agreeLink} onPress={() => router.push('/info/rules')}>
+                    {t.createStore.agreeLink}
+                  </AppText>
+                  {t.createStore.agreeSuffix}
+                </AppText>
+              }
+            />
+          </View>
+        </FormCard>
       </View>
 
       <BottomSheet visible={doneId != null} onClose={finish} title={t.createStore.successTitle} dismissOnBackdrop={false}>
@@ -125,6 +180,17 @@ export default function CreateStoreStep3() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  form: { paddingTop: 16, gap: 12, paddingBottom: layout.screenPadding },
+  body: { padding: layout.screenPadding, gap: 16 },
+  phoneRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
+  // Figma: 71×56 #F5F5F5 qutu, "+994" 16 #BFBFBF
+  prefix: { width: 71, height: 56, borderRadius: 8, backgroundColor: colors.inputBackgroundEmpty, alignItems: 'center', justifyContent: 'center' },
+  prefixText: { ...typography.body, color: colors.textPlaceholder },
+  // Figma: iki link yan-yana, aralarında 12
+  pair: { flexDirection: 'row', paddingHorizontal: 16, gap: 12 },
+  half: { flex: 1, paddingHorizontal: 0 },
+  agree: { paddingHorizontal: 16 },
+  agreeText: { flex: 1, ...typography.smallMedium, lineHeight: 20, color: colors.textMuted },
+  agreeError: { color: colors.danger },
+  agreeLink: { color: colors.primary, textDecorationLine: 'underline' },
   success: { alignItems: 'center', gap: 12, paddingVertical: 8 },
 });

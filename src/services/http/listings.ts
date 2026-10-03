@@ -1,6 +1,7 @@
 import type { Listing, ListingStatus, ListingSummary, Paginated } from '@/types/domain';
 import { ApiError, type CreateListingInput, type ListingApi } from '../api';
 import { httpAuth } from './auth';
+import { mapInsights, type ApiMetrics } from './insights';
 import { cityIdByName } from './catalog';
 import { applyPromotion, promotionOffer } from './plan';
 import { request, unwrapList } from './client';
@@ -56,6 +57,12 @@ export const httpListings: ListingApi = {
     return { items: items.map(mapSummary), total: count, page, hasMore: hasNext };
   },
 
+  async premiumPage(page) {
+    const res = await request<unknown>('listings/listings/premium/', { auth: false, query: { page, page_size: 8 } });
+    const { items, count, hasNext } = unwrapList<ApiListing>(res);
+    return { items: items.map(mapSummary), total: count, page, hasMore: hasNext };
+  },
+
   async premium(filter) {
     // `listings/premium/` kateqoriya filtrini qəbul etmir (backend boşluğu) — süzgəc varsa
     // premium elanlar ES axtarışından `is_premium=true` ilə götürülür
@@ -89,6 +96,12 @@ export const httpListings: ListingApi = {
     return mapListing(await detailBySlug(id));
   },
 
+  async insights(id) {
+    const listing = await detailBySlug(id);
+    const res = await request<ApiMetrics>(`plan/listings/${listing.id}/metrics/`);
+    return mapInsights(res);
+  },
+
   async mine(status) {
     const res = await request<unknown>('listings/listings/my/', {
       query: { status: STATUS_TO_API[status], page_size: 50 },
@@ -103,6 +116,7 @@ export const httpListings: ListingApi = {
 
     const payload = {
       title: input.title,
+      ...(input.contactName ? { contact_name: input.contactName } : {}),
       description: input.description,
       service_type: SERVICE_TYPE_TO_API[input.type],
       price: input.price != null ? String(input.price) : undefined,
@@ -131,6 +145,7 @@ export const httpListings: ListingApi = {
       method: 'PATCH',
       body: {
         ...(input.title != null ? { title: input.title } : {}),
+        ...(input.contactName !== undefined ? { contact_name: input.contactName || null } : {}),
         ...(input.description != null ? { description: input.description } : {}),
         ...(input.type != null ? { service_type: SERVICE_TYPE_TO_API[input.type] } : {}),
         ...(input.price !== undefined ? { price: input.price != null ? String(input.price) : null } : {}),

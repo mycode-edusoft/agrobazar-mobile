@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -7,7 +7,8 @@ import { useQuery } from '@tanstack/react-query';
 import { ListingCard } from '@/components/listing/ListingCard';
 import { ListingsEmpty } from '@/components/listing/ListingsEmpty';
 import { useListingActions } from '@/components/listing/useListingActions';
-import { TierDot } from '@/components/plans/TierDot';
+import { LinearGradient } from 'expo-linear-gradient';
+import { CirclePlusIcon, ForwardArrowIcon, PowerBadgeIcon } from '@/components/icons/BadgeIcons';
 import { AppText, Button, Card, IconButton, ListRow, Pill, Screen, ScreenHeader } from '@/components/ui';
 import { t } from '@/i18n/az';
 import { formatAmount } from '@/lib/format';
@@ -15,11 +16,12 @@ import { qk, useEntitlements } from '@/lib/queries';
 import { MY_LISTING_TABS } from '@/lib/rules';
 import { api } from '@/services';
 import { useAuthStore } from '@/store/auth';
-import { colors, layout, radii, shadows } from '@/theme';
-import type { ListingStatus } from '@/types/domain';
+import { colors, layout, radii, shadows, typography } from '@/theme';
+import type { ListingStatus, PlanTier } from '@/types/domain';
 import { Icon } from '@/components/icons/Icon';
 
-// Figma: Şəxsi kabinet (2137:14480)
+// Figma "App 2 → Şəxsi kabinet" (son variant): tarif nişanı profil blokunun sağ üstündə,
+// Balans kartında "Balans artır" düyməsi, Aktif tarif kartında dolu power2 ikonu.
 export default function CabinetScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
@@ -75,6 +77,7 @@ export default function CabinetScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Profil */}
         <View style={styles.profile}>
+          <TierPill tier={tier} name={planName} style={styles.tierPill} />
           <View>
             <View style={styles.avatar}>
               {user.avatarUrl ? (
@@ -83,15 +86,12 @@ export default function CabinetScreen() {
                 <Ionicons name="person" size={32} color={colors.textMuted} />
               )}
             </View>
-            <View style={styles.avatarBadge}>
-              <TierDot tier={tier} size={20} />
-            </View>
           </View>
           <View style={styles.nameBlock}>
             <AppText variant="bodyMedium" color="#181818" center style={styles.lh14}>
               {user.fullName ?? user.phone}
             </AppText>
-            <AppText variant="small" color={colors.textHelper} center style={styles.lh14}>
+            <AppText variant="small" color={colors.textHelper} center style={styles.lh20}>
               {user.phone}
             </AppText>
           </View>
@@ -112,6 +112,14 @@ export default function CabinetScreen() {
           }
           title={t.balance.title}
           value={formatAmount(user.balance)}
+          action={
+            <Pressable onPress={() => router.push('/cabinet/balance/top-up')} style={styles.topUpBtn}>
+              <CirclePlusIcon bg={colors.primary} />
+              <AppText variant="small" color={colors.surface} style={styles.lh22}>
+                {t.cabinet.topUpBalance}
+              </AppText>
+            </Pressable>
+          }
         />
 
         {/* Aktiv tarif */}
@@ -119,13 +127,26 @@ export default function CabinetScreen() {
           onPress={() => router.push(sub.data ? '/cabinet/plans/active' : '/cabinet/plans')}
           icon={
             <View style={styles.iconBox}>
-              <TierDot tier={tier} />
+              <PowerBadgeIcon color={colors.tier[tier].solid} />
             </View>
           }
           title={t.cabinet.activePlan}
           value={planName}
-          valueColor={colors.tier[tier].text}
+          valueColor={colors.tier[tier].solid}
         />
+
+        {/* Figma "Business account": mağazası olan istifadəçidə mağaza səhifəsinə keçid */}
+        {user.storeId ? (
+          <InfoCard
+            onPress={() => router.push({ pathname: '/stores/[id]', params: { id: user.storeId! } })}
+            icon={
+              <View style={styles.iconBox}>
+                <ForwardArrowIcon color={colors.primary} />
+              </View>
+            }
+            title={t.cabinet.goToStore}
+          />
+        ) : null}
 
         {/* Elanlarım */}
         <View style={styles.sectionHeader}>
@@ -138,7 +159,7 @@ export default function CabinetScreen() {
             </AppText>
           </Pressable>
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs} style={styles.tabsRow}>
           {MY_LISTING_TABS.map((s) => (
             <Pill key={s} variant="outline" label={t.listing.status[s]} active={status === s} onPress={() => setStatus(s)} />
           ))}
@@ -162,22 +183,35 @@ export default function CabinetScreen() {
   );
 }
 
+// Figma: 12/16 SemiBold #595959 başlıq + dəyər; sağda ya düymə (Balans), ya da ox (Aktif tarif)
 function InfoCard({
-  icon, title, value, valueColor = colors.textSecondary, onPress,
-}: { icon: React.ReactNode; title: string; value: string; valueColor?: string; onPress(): void }) {
+  icon, title, value, valueColor = colors.textSecondary, onPress, action,
+}: { icon: React.ReactNode; title: string; value?: string; valueColor?: string; onPress(): void; action?: React.ReactNode }) {
   return (
     <Pressable onPress={onPress} style={styles.infoCard}>
       {icon}
       <View style={styles.infoText}>
-        <AppText variant="captionMedium" color={colors.textSecondary} style={styles.lh13}>
-          {title}
-        </AppText>
-        <AppText variant="captionMedium" color={valueColor} style={styles.lh13}>
-          {value}
-        </AppText>
+        <AppText style={styles.infoLabel}>{title}</AppText>
+        {value != null ? <AppText style={[styles.infoLabel, { color: valueColor }]}>{value}</AppText> : null}
       </View>
-      <Icon name="chevron" direction="right" size={20} color={colors.textSecondary} />
+      {action ?? (
+        <View style={styles.chevron}>
+          <Icon name="chevron" direction="right" size={24} color={colors.textMuted} />
+        </View>
+      )}
     </Pressable>
+  );
+}
+
+// Figma "Upgrade Container": 20px hündürlük, tarif gradienti (54%) + 15% qara, ağ power2 + ad 10 Bold
+function TierPill({ tier, name, style }: { tier: PlanTier; name: string; style?: StyleProp<ViewStyle> }) {
+  const c = colors.tier[tier];
+  return (
+    <View style={[styles.pill, style]}>
+      <LinearGradient colors={[c.from, c.to]} style={[StyleSheet.absoluteFill, styles.pillGradient]} />
+      <PowerBadgeIcon variant="line" size={14} />
+      <AppText style={styles.pillText}>{name}</AppText>
+    </View>
   );
 }
 
@@ -195,9 +229,11 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.borderSubtle, alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
   },
   avatarImg: { width: '100%', height: '100%' },
-  avatarBadge: { position: 'absolute', right: -2, bottom: 2 },
+  tierPill: { position: 'absolute', top: 0, right: layout.screenPadding },
   nameBlock: { gap: 4, marginTop: -4 },
   lh14: { lineHeight: 22 },
+  lh20: { lineHeight: 20 },
+  lh22: { lineHeight: 22 },
   editBtn: {
     height: 36, paddingHorizontal: 22, borderRadius: 24, backgroundColor: colors.surface,
     borderWidth: 1, borderColor: colors.borderSubtle, alignItems: 'center', justifyContent: 'center',
@@ -213,10 +249,24 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   infoText: { flex: 1, gap: 6 },
-  lh13: { lineHeight: 16 },
+  infoLabel: { fontFamily: typography.tabLabelActive.fontFamily, fontSize: 12, lineHeight: 16, color: colors.textSecondary },
+  chevron: { width: 28, height: 32, alignItems: 'center', justifyContent: 'center' },
+  topUpBtn: {
+    height: 34, paddingHorizontal: 10, borderRadius: radii.sm, backgroundColor: colors.primary,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+  },
+
+  pill: {
+    height: 20, paddingHorizontal: 8, borderRadius: 9999, overflow: 'hidden', backgroundColor: 'rgba(0, 0, 0, 0.15)',
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+  },
+  pillGradient: { opacity: 0.54 },
+  pillText: { fontFamily: typography.bodyBold.fontFamily, fontSize: 10, lineHeight: 13, color: colors.surface },
 
   sectionHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: layout.screenPadding, marginBottom: -4 },
   underline: { textDecorationLine: 'underline' },
+  // Figma: çip sırası opacity .8
+  tabsRow: { opacity: 0.8, flexGrow: 0 },
   tabs: { paddingHorizontal: layout.screenPadding, gap: 10 },
 
   previewWrap: { paddingHorizontal: layout.screenPadding },

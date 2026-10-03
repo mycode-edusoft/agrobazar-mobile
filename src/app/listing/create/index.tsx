@@ -1,15 +1,14 @@
 import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { CategoryIcon } from '@/components/listing/CategoryIcon';
-import { PickerList } from '@/components/listing/PickerList';
+import { CategoryCardList } from '@/components/catalog/CategoryCardList';
 import { AppText, Button, Card, Screen, ScreenHeader } from '@/components/ui';
 import { t } from '@/i18n/az';
 import { useCategories, useEntitlements } from '@/lib/queries';
 import { useAuthStore } from '@/store/auth';
 import { useListingDraft } from '@/store/listingDraft';
-import { colors, layout } from '@/theme';
+import { colors } from '@/theme';
 
 export default function CreateListingCategoryScreen() {
   const router = useRouter();
@@ -48,16 +47,19 @@ export default function CreateListingCategoryScreen() {
   }
 
   return (
-    <Screen header={<ScreenHeader title={t.createListing.selectCategory} />}>
-      <PickerList
-        items={(categories ?? []).map((c) => ({ id: c.id, name: c.name, icon: <CategoryIcon icon={c.icon} imageUrl={c.imageUrl} size={36} /> }))}
-        searchPlaceholder={t.catalog.searchCategory}
+    // Figma "Kataloq step 17": başlıq "Yeni elan", kateqoriya siyahısı → alt kateqoriya → növ → forma
+    <Screen header={<ScreenHeader title={t.createListing.title} />}>
+      <CategoryCardList
+        categories={categories ?? []}
         onSelect={(item) => {
           setCategory(item.id);
-          router.push({ pathname: '/listing/create/subcategory', params: { categoryId: item.id } });
+          if (item.subcategories.length > 0) {
+            router.push({ pathname: '/catalog/sub/[categoryId]', params: { categoryId: item.id, mode: 'create' } });
+          } else {
+            router.push('/listing/create/form');
+          }
         }}
       />
-      <View style={styles.spacer} />
     </Screen>
   );
 }
@@ -65,5 +67,4 @@ export default function CreateListingCategoryScreen() {
 const styles = StyleSheet.create({
   blocked: { alignItems: 'center', gap: 16, paddingVertical: 40, marginTop: 16 },
   stretch: { alignSelf: 'stretch' },
-  spacer: { height: layout.screenPadding },
 });

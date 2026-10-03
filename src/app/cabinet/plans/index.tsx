@@ -1,17 +1,20 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { TierBadge } from '@/components/plans/TierBadge';
-import { AppText, Card, Screen, ScreenHeader, SegmentedControl } from '@/components/ui';
+import { Icon } from '@/components/icons/Icon';
+import { PopularPill } from '@/components/plans/PlanSheet';
+import { TierIconBox } from '@/components/plans/TierDot';
+import { AppText, Screen, ScreenHeader, SegmentedControl } from '@/components/ui';
 import { t } from '@/i18n/az';
+import { formatAmount } from '@/lib/format';
+import { planPrice } from '@/lib/plans';
 import { qk } from '@/lib/queries';
 import { api } from '@/services';
 import { useAuthStore } from '@/store/auth';
-import { colors, layout } from '@/theme';
+import { colors, layout, shadows, typography } from '@/theme';
 import type { BillingCycle, Plan, UserType } from '@/types/domain';
-import { Icon } from '@/components/icons/Icon';
 
 const userTypeOptions: { value: UserType; label: string }[] = [
   { value: 'individual', label: t.plans.individual },
@@ -22,143 +25,108 @@ const cycleOptions: { value: BillingCycle; label: string }[] = [
   { value: 'yearly', label: t.plans.yearly },
 ];
 
+/**
+ * Figma "Tariflər aylıq / illik": ağ zolaqda Aylıq/İllik, başlıq + izah, 3 tarif kartı.
+ * Kart toxunanda tarif səhifəsi açılır. Daxil olmuş istifadəçi yalnız öz hesab tipinin tariflərini görür;
+ * qonaq üçün Fərdi/Korporativ seçimi də göstərilir (Figma-da yoxdur — bax designer-notes).
+ */
 export default function PlansScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const [cycle, setCycle] = useState<BillingCycle>('monthly');
-  const [userType, setUserType] = useState<UserType>(user?.type ?? 'individual');
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [guestType, setGuestType] = useState<UserType>('individual');
+  const userType = user?.type ?? guestType;
 
   const plans = useQuery({ queryKey: qk.plans(userType), queryFn: () => api.plans.plans(userType) });
   const sub = useQuery({ queryKey: qk.subscription, queryFn: () => api.plans.current(), enabled: !!user });
-  const foreignType = !!user && user.type !== userType;
 
   return (
-    <Screen
-      header={
-        <ScreenHeader
-          title={t.cabinet.plans}
-          right={
-            sub.data ? (
-              <Pressable onPress={() => router.push('/cabinet/plans/active')} hitSlop={8}>
-                <AppText variant="smallMedium" color={colors.primary}>
-                  {t.cabinet.myPlan}
-                </AppText>
-              </Pressable>
-            ) : null
-          }
-        />
-      }
-      scroll
-      padded
-    >
-      <View style={styles.body}>
-        <SegmentedControl<UserType> options={userTypeOptions} value={userType} onChange={setUserType} />
-        <SegmentedControl<BillingCycle> options={cycleOptions} value={cycle} onChange={setCycle} />
-        <View style={styles.subtitle}>
-          <AppText variant="buttonLarge" center>
-            {t.plans.subtitle}
-          </AppText>
-          <AppText variant="small" color={colors.textMuted} center>
-            {foreignType ? `Sizin hesabınız ${t.cabinet.userType[user!.type]} tiplidir — bu tariflər yalnız məlumat üçündür.` : t.plans.subtitleHint}
-          </AppText>
+    <Screen header={<ScreenHeader title={t.cabinet.plans} />} background="#F2F2F2">
+      <View style={styles.segments}>
+        {!user ? <SegmentedControl<UserType> options={userTypeOptions} value={guestType} onChange={setGuestType} tall /> : null}
+        <SegmentedControl<BillingCycle> options={cycleOptions} value={cycle} onChange={setCycle} tall />
+      </View>
+      <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+        <View style={styles.intro}>
+          <AppText style={styles.title}>{t.plans.subtitle}</AppText>
+          <AppText style={styles.hint}>{t.plans.subtitleHint}</AppText>
         </View>
-
         {(plans.data ?? []).map((plan) => (
           <PlanCard
             key={plan.id}
             plan={plan}
             cycle={cycle}
-            expanded={expanded === plan.id}
-            onToggle={() => setExpanded(expanded === plan.id ? null : plan.id)}
-            active={sub.data?.planId === plan.id}
-            disabled={foreignType}
-            onSelect={() => router.push({ pathname: '/cabinet/plans/[tier]', params: { tier: plan.tier, planId: plan.id, cycle } })}
+            active={sub.data?.planId === plan.id && sub.data.status === 'active'}
+            onPress={() =>
+              sub.data?.planId === plan.id
+                ? router.push('/cabinet/plans/active')
+                : router.push({ pathname: '/cabinet/plans/[tier]', params: { tier: plan.tier, planId: plan.id, cycle, userType } })
+            }
           />
         ))}
-      </View>
+      </ScrollView>
     </Screen>
   );
 }
 
-function PlanCard({
-  plan, cycle, expanded, onToggle, active, disabled, onSelect,
-}: { plan: Plan; cycle: BillingCycle; expanded: boolean; onToggle(): void; active: boolean; disabled: boolean; onSelect(): void }) {
-  const price = cycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice;
-  const old = cycle === 'monthly' ? plan.oldMonthlyPrice : plan.oldMonthlyPrice != null ? plan.oldMonthlyPrice * 10 : null;
-  const tint = colors.tier[plan.tier].text;
-
+function PlanCard({ plan, cycle, active, onPress }: { plan: Plan; cycle: BillingCycle; active: boolean; onPress(): void }) {
+  const { price, old } = planPrice(plan, cycle);
   return (
-    <Card style={styles.plan}>
-      <Pressable onPress={onToggle} style={styles.planRow}>
-        <TierBadge tier={plan.tier} />
-        <View style={styles.flex}>
-          <View style={styles.nameRow}>
-            <AppText variant="bodyBold" color={tint}>
-              {plan.name}
-            </AppText>
-            {plan.popular ? (
-              <View style={styles.popular}>
-                <AppText variant="caption" color={colors.link} style={styles.popularText}>
-                  {t.plans.popular}
-                </AppText>
-              </View>
-            ) : null}
-            {active ? (
-              <View style={[styles.popular, styles.activeBadge]}>
-                <AppText variant="caption" color={colors.primary} style={styles.popularText}>
-                  {t.plans.active}
-                </AppText>
-              </View>
-            ) : null}
-          </View>
-          <View style={styles.priceRow}>
-            {old != null ? (
-              <AppText variant="caption" color={colors.textPlaceholder} style={styles.old}>
-                {old.toFixed(2)} ₼
-              </AppText>
-            ) : null}
-            <AppText variant="bodyMedium">
-              {price.toFixed(2)} ₼ {cycle === 'monthly' ? t.plans.perMonth : t.plans.perYear}
-            </AppText>
-          </View>
+    <Pressable onPress={onPress} style={styles.card}>
+      <TierIconBox tier={plan.tier} />
+      <View style={styles.cardText}>
+        <View style={styles.nameRow}>
+          <AppText style={[styles.label, { color: colors.tier[plan.tier].text }]}>{plan.name}</AppText>
+          {plan.popular ? <PopularPill /> : null}
+          {active ? (
+            <AppText style={[styles.label, styles.activeTag]}>{t.plans.active}</AppText>
+          ) : null}
         </View>
-        <Icon name="chevron" direction={expanded ? 'up' : 'down'} size={20} color={colors.textMuted} />
-      </Pressable>
-      {expanded ? (
-        <View style={styles.benefits}>
-          {plan.benefits.map((b) => (
-            <View key={b} style={styles.benefit}>
-              <Ionicons name="checkmark-circle" size={18} color={colors.successAlt} />
-              <AppText variant="small" color={colors.textSecondary}>
-                {b}
-              </AppText>
-            </View>
-          ))}
-          <Pressable onPress={onSelect} disabled={disabled || active} style={[styles.selectBtn, { backgroundColor: disabled || active ? colors.disabledBackground : colors.primary }]}>
-            <AppText variant="button" color={disabled || active ? colors.disabledText : colors.surface}>
-              {active ? t.plans.active : t.plans.buy}
-            </AppText>
-          </Pressable>
+        <View style={styles.priceRow}>
+          <AppText style={styles.label}>
+            {formatAmount(price)} {cycle === 'monthly' ? t.plans.perMonth : t.plans.perYear}
+          </AppText>
+          {old != null ? <AppText style={styles.old}>{formatAmount(old)}</AppText> : null}
+        </View>
+      </View>
+      <View style={styles.chevron}>
+        <Icon name="chevron" direction="right" size={24} color={colors.textMuted} />
+      </View>
+      {/* Figma "ic_topi": ən populyar tarifin sol üst küncündə mavi lent + ağ ulduz */}
+      {plan.popular ? (
+        <View style={styles.ribbon} pointerEvents="none">
+          <View style={styles.ribbonTriangle} />
+          <Ionicons name="star" size={11} color={colors.surface} style={styles.ribbonStar} />
         </View>
       ) : null}
-    </Card>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  body: { paddingTop: 16, gap: 12, paddingBottom: layout.screenPadding },
-  subtitle: { gap: 4, paddingVertical: 8 },
-  plan: { gap: 12 },
-  planRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  popular: { borderWidth: 1, borderColor: colors.link, borderRadius: 100, paddingHorizontal: 8, height: 20, justifyContent: 'center' },
-  activeBadge: { borderColor: colors.primary },
-  popularText: { lineHeight: 14 },
-  priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
-  old: { textDecorationLine: 'line-through' },
-  benefits: { gap: 10, borderTopWidth: 1, borderTopColor: colors.divider, paddingTop: 12 },
-  benefit: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  selectBtn: { height: 44, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  // Figma: ağ zolaq, padding 16; seqment 56px (4px daxili boşluq + 48px düymələr)
+  segments: { backgroundColor: colors.surface, padding: 16, gap: 10 },
+  body: { paddingTop: 16, paddingBottom: 32, gap: 16 },
+  intro: { gap: 6, paddingHorizontal: 54 },
+  title: { fontFamily: typography.bodyMedium.fontFamily, fontSize: 18, lineHeight: 25, color: '#181818', textAlign: 'center' },
+  hint: { ...typography.small, lineHeight: 20, color: '#9DA4AE', textAlign: 'center' },
+  card: {
+    marginHorizontal: layout.screenPadding, minHeight: 72, borderRadius: 14, backgroundColor: colors.surface,
+    paddingVertical: 16, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 12, overflow: 'hidden',
+    ...shadows.card,
+  },
+  cardText: { flex: 1, gap: 6 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  // Figma: 12 SemiBold 130%, #595959
+  label: { fontFamily: typography.tabLabelActive.fontFamily, fontSize: 12, lineHeight: 16, color: colors.textSecondary },
+  activeTag: { color: colors.primary },
+  old: { ...typography.caption, lineHeight: 16, color: 'rgba(157, 164, 174, 0.71)', textDecorationLine: 'line-through' },
+  chevron: { width: 28, height: 32, alignItems: 'center', justifyContent: 'center' },
+  ribbon: { position: 'absolute', top: 0, left: 0, width: 40, height: 40 },
+  ribbonTriangle: {
+    width: 0, height: 0, borderTopWidth: 40, borderRightWidth: 40,
+    borderTopColor: '#1977F2', borderRightColor: 'transparent',
+  },
+  ribbonStar: { position: 'absolute', top: 5, left: 5 },
 });

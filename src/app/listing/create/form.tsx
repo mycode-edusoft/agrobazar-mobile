@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
+import { RegionSheet } from '@/components/catalog/RegionSheet';
+import { SelectChip } from '@/components/catalog/SelectChip';
+import { Field, FormCard, Section, SelectField } from '@/components/store/FormKit';
 import {
-  AppText, BottomSheet, Button, Card, Checkbox, FooterBar, ImagesPicker, Input, Screen, ScreenHeader,
-  SelectSheet, VideoPicker, useToast,
+  AppText, BottomSheet, Button, Checkbox, FooterBar, ImagesPicker, Screen, ScreenHeader, useToast,
 } from '@/components/ui';
 import { t } from '@/i18n/az';
 import { formatPhoneInput, isValidAzPhone, normalizePhone } from '@/lib/format';
@@ -13,8 +15,8 @@ import { LISTING_DEFAULTS } from '@/lib/rules';
 import { api, ApiError } from '@/services';
 import { useAuthStore } from '@/store/auth';
 import { useListingDraft } from '@/store/listingDraft';
-import { colors, layout } from '@/theme';
-import type { ListingType } from '@/types/domain';
+import { colors, layout, typography } from '@/theme';
+import type { DynamicFieldDef, ListingType } from '@/types/domain';
 import { Icon } from '@/components/icons/Icon';
 
 const listingTypes: ListingType[] = ['sale', 'rent', 'wanted', 'offer'];
@@ -35,6 +37,12 @@ export default function CreateListingFormScreen() {
   const [touched, setTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+
+  // Əlaqə adı ilk dəfə profil adı ilə doldurulur (istifadəçi dəyişə bilər)
+  useEffect(() => {
+    if (!editingId && !draft.contactName && user?.fullName) set({ contactName: user.fullName });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const category = categories?.find((c) => c.id === draft.categoryId) ?? null;
   const subcategory = category?.subcategories.find((s) => s.id === draft.subcategoryId) ?? null;
@@ -81,6 +89,7 @@ export default function CreateListingFormScreen() {
       negotiable: draft.negotiable,
       city: draft.city,
       title: draft.title.trim(),
+      contactName: draft.contactName.trim() || null,
       description: draft.description.trim(),
       whatsapp: normalizePhone(draft.whatsapp),
       images: draft.images,
@@ -107,132 +116,187 @@ export default function CreateListingFormScreen() {
     router.replace('/cabinet/my-listings');
   };
 
-  const chevron = <Icon name="chevron" direction="down" size={20} color={colors.textMuted} />;
-  const categoryLabel = [category?.name, subcategory?.name].filter(Boolean).join(' / ');
+  // Figma: yan-yana duran rəqəm sahələri (məs. "Yürüşü (km)" + "Buraxılış ili") cüt-cüt sıraya düzülür
+  const fieldRows = useMemo(() => {
+    const rows: DynamicFieldDef[][] = [];
+    for (const f of fieldDefs) {
+      const last = rows[rows.length - 1];
+      if (f.type === 'number' && last?.length === 1 && last[0].type === 'number') last.push(f);
+      else rows.push([f]);
+    }
+    return rows;
+  }, [fieldDefs]);
+
+  const fieldLabel = (f: DynamicFieldDef) => `${f.label}${f.unit ? ` (${f.unit})` : ''}`;
+  const renderField = (f: DynamicFieldDef, style?: StyleProp<ViewStyle>) =>
+    f.type === 'select' ? (
+      <Section key={f.key} title={fieldLabel(f)} style={style}>
+        <SelectField value={draft.fields[f.key] ?? ''} placeholder={t.common.select} onPress={() => setSheet(`field:${f.key}`)} error={err(`field:${f.key}`)} />
+      </Section>
+    ) : (
+      <Section key={f.key} title={fieldLabel(f)} style={style}>
+        <Field
+          value={draft.fields[f.key] ?? ''}
+          onChangeText={(v) => set({ fields: { ...draft.fields, [f.key]: f.type === 'number' ? v.replace(/[^\d.]/g, '') : v } })}
+          keyboardType={f.type === 'number' ? 'numeric' : 'default'}
+          placeholder={f.type === 'number' ? '0' : t.common.enter}
+          error={err(`field:${f.key}`)}
+        />
+      </Section>
+    );
+
+  const sheetField = sheet?.startsWith('field:') ? fieldDefs.find((f) => `field:${f.key}` === sheet) : undefined;
 
   return (
     <Screen
-      header={<ScreenHeader title={editingId ? t.listing.edit : t.createListing.title} rightText={t.common.reset} onRightPress={() => set({ price: '', negotiable: false, city: '', title: '', description: '', whatsapp: '', images: [], videoUri: null, fields: {}, agreed: false })} />}
+      header={
+        <ScreenHeader
+          title={editingId ? t.listing.edit : t.createListing.title}
+          rightText={t.common.reset}
+          onRightPress={() => set({ price: '', negotiable: false, city: '', title: '', contactName: '', description: '', whatsapp: '', images: [], videoUri: null, fields: {}, agreed: false })}
+        />
+      }
       scroll
-      padded
       keyboard
       footer={
         <FooterBar>
-          <Button title={editingId ? t.common.save : t.createListing.submit} onPress={submit} loading={submitting} />
+          <Button
+            title={editingId ? t.common.save : t.createListing.submit}
+            icon={editingId ? undefined : <Icon name="plus" size={20} color={colors.surface} />}
+            onPress={submit}
+            loading={submitting}
+          />
         </FooterBar>
       }
     >
-      <View style={styles.form}>
+      {/* Figma "Business account / Elan yerləşdir → Yeni elan": bütün sahələr bir ağ kartda */}
+      <View style={styles.body}>
         {editingId ? (
           <AppText variant="caption" color={colors.danger}>
             {t.listing.editWarning}
           </AppText>
         ) : null}
-        <Input label={t.createListing.selectCategory} value={categoryLabel} error={err('category')} onPressContainer={() => router.push('/listing/create')} rightElement={chevron} />
-        {subcategory && subcategory.subsubcategories.length > 0 ? (
-          <Input label={t.createListing.subsubcategory} value={subsub?.name ?? ''} placeholder={t.common.select} error={err('subsub')} onPressContainer={() => setSheet('subsub')} rightElement={chevron} />
-        ) : null}
+        <FormCard>
+          <Section title={t.filter.category}>
+            <SelectField value={category?.name ?? ''} placeholder={t.common.select} error={err('category')} onPress={() => router.dismissTo('/listing/create')} />
+          </Section>
+          {category ? (
+            <Section title={t.createListing.productCategory}>
+              <SelectField
+                value={subsub?.name ?? subcategory?.name ?? ''}
+                placeholder={t.common.select}
+                error={err('subsub')}
+                onPress={() => router.push({ pathname: '/catalog/sub/[categoryId]', params: { categoryId: category.id, mode: 'create' } })}
+              />
+            </Section>
+          ) : null}
 
-        <AppText variant="bodyBold" color={colors.textSecondary}>
-          {t.createListing.service}
-        </AppText>
-        <Card flat style={styles.group}>
-          {listingTypes.map((type) => (
-            <Checkbox key={type} checked={draft.type === type} onChange={() => set({ type, negotiable: type === 'offer' ? draft.negotiable : false })} label={t.listingType[type]} />
-          ))}
-        </Card>
+          {fieldRows.map((row) =>
+            row.length === 2 ? (
+              <View key={row[0].key} style={styles.pair}>
+                {renderField(row[0], styles.half)}
+                {renderField(row[1], styles.half)}
+              </View>
+            ) : (
+              renderField(row[0])
+            ),
+          )}
 
-        <Input
-          label={t.createListing.price}
-          value={draft.price}
-          onChangeText={(v) => set({ price: v.replace(/[^\d.,]/g, '') })}
-          keyboardType="decimal-pad"
-          placeholder={t.createListing.pricePlaceholder}
-          error={err('price')}
-          editable={!draft.negotiable}
-        />
-        {draft.type === 'offer' ? (
-          <Checkbox checked={draft.negotiable} onChange={(v) => set({ negotiable: v, price: v ? '' : draft.price })} label={t.common.negotiable} />
-        ) : null}
+          <Section title={t.createListing.service}>
+            <View style={styles.chips}>
+              {listingTypes.map((type) => (
+                <SelectChip key={type} label={t.listingType[type]} active={draft.type === type} onPress={() => set({ type, negotiable: type === 'offer' ? draft.negotiable : false })} />
+              ))}
+            </View>
+            {draft.type === 'offer' ? (
+              <Checkbox checked={draft.negotiable} onChange={(v) => set({ negotiable: v, price: v ? '' : draft.price })} label={t.common.negotiable} />
+            ) : null}
+          </Section>
 
-        <Input label={t.createListing.region} value={draft.city} placeholder={t.common.select} error={err('city')} onPressContainer={() => setSheet('region')} rightElement={chevron} />
-
-        {fieldDefs.map((f) =>
-          f.type === 'select' ? (
-            <Input
-              key={f.key}
-              label={f.label + (f.required ? ' *' : '')}
-              value={draft.fields[f.key] ?? ''}
-              placeholder={t.common.select}
-              error={err(`field:${f.key}`)}
-              onPressContainer={() => setSheet(`field:${f.key}`)}
-              rightElement={chevron}
+          <Section title={t.filter.priceAzn}>
+            <Field
+              value={draft.price}
+              onChangeText={(v) => set({ price: v.replace(/[^\d.,]/g, '') })}
+              keyboardType="decimal-pad"
+              placeholder={t.createListing.pricePlaceholder}
+              error={err('price')}
+              editable={!draft.negotiable}
             />
-          ) : (
-            <Input
-              key={f.key}
-              label={`${f.label}${f.unit ? ` (${f.unit})` : ''}${f.required ? ' *' : ''}`}
-              value={draft.fields[f.key] ?? ''}
-              onChangeText={(v) => set({ fields: { ...draft.fields, [f.key]: f.type === 'number' ? v.replace(/[^\d.]/g, '') : v } })}
-              keyboardType={f.type === 'number' ? 'numeric' : 'default'}
-              error={err(`field:${f.key}`)}
+          </Section>
+
+          <Section title={t.createListing.region}>
+            <SelectField value={draft.city} placeholder={t.common.select} error={err('city')} onPress={() => setSheet('region')} />
+          </Section>
+
+          <Section title={t.createListing.listingTitle}>
+            <Field value={draft.title} onChangeText={(v) => set({ title: v })} placeholder={t.common.enter} error={err('title')} maxLength={80} />
+          </Section>
+
+          <Section title={t.createListing.contactName}>
+            <Field value={draft.contactName} onChangeText={(v) => set({ contactName: v })} placeholder={t.common.enter} maxLength={80} />
+          </Section>
+
+          <Section title={t.createListing.description}>
+            <Field
+              value={draft.description}
+              onChangeText={(v) => set({ description: v })}
+              placeholder={t.createListing.descriptionPlaceholder}
+              error={err('description')}
+              multiline
+              maxLength={2000}
             />
-          ),
-        )}
+          </Section>
 
-        <Input label={t.createListing.listingTitle} value={draft.title} onChangeText={(v) => set({ title: v })} placeholder={t.common.enter} error={err('title')} maxLength={80} />
-        <Input label={t.createListing.description} value={draft.description} onChangeText={(v) => set({ description: v })} placeholder={t.createListing.descriptionPlaceholder} error={err('description')} multiline maxLength={2000} />
-        <Input
-          label={t.createListing.whatsapp}
-          value={draft.whatsapp}
-          onChangeText={(v) => set({ whatsapp: formatPhoneInput(v) })}
-          keyboardType="phone-pad"
-          placeholder={t.auth.phonePlaceholder}
-          error={err('whatsapp')}
-          leftIcon={<AppText variant="body" color={colors.textSecondary}>+994</AppText>}
-        />
-        {user ? (
-          <AppText variant="caption" color={colors.textMuted}>
-            {t.listing.seller}: {user.phone}
-          </AppText>
-        ) : null}
+          <Section title={t.createListing.whatsapp}>
+            <View style={styles.phoneRow}>
+              <View style={styles.prefix}>
+                <AppText style={styles.prefixText}>+994</AppText>
+              </View>
+              <Field
+                style={styles.flex}
+                left={<Icon name="phone" size={24} color={colors.textSecondary} />}
+                value={draft.whatsapp}
+                onChangeText={(v) => set({ whatsapp: formatPhoneInput(v) })}
+                keyboardType="phone-pad"
+                placeholder={t.auth.phonePlaceholder}
+                error={err('whatsapp')}
+              />
+            </View>
+          </Section>
 
-        <AppText variant="bodyBold" color={colors.textSecondary}>
-          {t.createListing.images}
-        </AppText>
-        <ImagesPicker uris={draft.images} onChange={(images) => set({ images })} min={imageLimit.min} max={imageLimit.max} hint={t.createListing.imagesHint(imageLimit.min, imageLimit.max)} error={err('images')} />
-        <VideoPicker uri={draft.videoUri} onChange={(videoUri) => set({ videoUri })} label={t.createListing.video} maxBytes={LISTING_DEFAULTS.maxVideoBytes} />
+          {/* Figma: şəkillər kartın içində 24px kənar boşluqla */}
+          <View style={styles.images}>
+            <ImagesPicker uris={draft.images} onChange={(images) => set({ images })} min={imageLimit.min} max={imageLimit.max} hint={t.createListing.imagesHint(imageLimit.min, imageLimit.max)} error={err('images')} />
+          </View>
 
-        <Checkbox
-          checked={draft.agreed}
-          onChange={(v) => set({ agreed: v })}
-          label={
-            <Pressable onPress={() => router.push('/info/rules')} style={styles.flex}>
-              <AppText variant="small" color={err('agreed') ? colors.danger : colors.textSecondary}>
-                {t.createListing.agreeRules}
-              </AppText>
-            </Pressable>
-          }
-        />
+          <View style={styles.agree}>
+            <Checkbox
+              checked={draft.agreed}
+              onChange={(v) => set({ agreed: v })}
+              label={
+                <AppText style={[styles.agreeText, !!err('agreed') && styles.agreeError]}>
+                  {t.createListing.agreePrefix}
+                  <AppText style={styles.agreeLink} onPress={() => router.push('/info/rules')}>
+                    {t.createListing.agreeLink}
+                  </AppText>
+                  {t.createListing.agreeSuffix}
+                </AppText>
+              }
+            />
+          </View>
+        </FormCard>
       </View>
 
-      <SelectSheet visible={sheet === 'region'} onClose={() => setSheet(null)} title={t.createListing.region} options={(cities ?? []).map((c) => ({ value: c, label: c }))} value={draft.city || null} onSelect={(v) => set({ city: v ?? '' })} searchable />
-      {subcategory ? (
-        <SelectSheet visible={sheet === 'subsub'} onClose={() => setSheet(null)} title={t.createListing.subsubcategory} options={subcategory.subsubcategories.map((b) => ({ value: b.id, label: b.name }))} value={draft.subsubId} onSelect={(v) => set({ subsubId: v })} searchable />
-      ) : null}
-      {fieldDefs
-        .filter((f) => f.type === 'select')
-        .map((f) => (
-          <SelectSheet
-            key={f.key}
-            visible={sheet === `field:${f.key}`}
-            onClose={() => setSheet(null)}
-            title={f.label}
-            options={(f.options ?? []).map((o) => ({ value: o, label: o }))}
-            value={draft.fields[f.key] ?? null}
-            onSelect={(v) => set({ fields: { ...draft.fields, [f.key]: v ?? '' } })}
-          />
-        ))}
+      {/* Figma "Bölgə" və "Marka" panelləri eyni komponentdir: axtarış + siyahı + yaşıl ✓ */}
+      <RegionSheet visible={sheet === 'region'} onClose={() => setSheet(null)} regions={cities ?? []} value={draft.city || null} onSelect={(city) => set({ city })} />
+      <RegionSheet
+        visible={!!sheetField}
+        onClose={() => setSheet(null)}
+        title={sheetField?.label}
+        regions={sheetField?.options ?? []}
+        value={sheetField ? draft.fields[sheetField.key] ?? null : null}
+        onSelect={(v) => sheetField && set({ fields: { ...draft.fields, [sheetField.key]: v } })}
+      />
 
       <BottomSheet visible={done} onClose={finish} title={t.createListing.submitted} dismissOnBackdrop={false}>
         <AppText variant="body" color={colors.textMuted} center>
@@ -246,6 +310,16 @@ export default function CreateListingFormScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  form: { paddingTop: 16, gap: 12, paddingBottom: layout.screenPadding },
-  group: { gap: 14 },
+  body: { padding: layout.screenPadding, gap: 12 },
+  pair: { flexDirection: 'row', paddingHorizontal: 16, gap: 12 },
+  half: { flex: 1, paddingHorizontal: 0 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
+  phoneRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
+  prefix: { width: 71, height: 56, borderRadius: 8, backgroundColor: colors.inputBackgroundEmpty, alignItems: 'center', justifyContent: 'center' },
+  prefixText: { ...typography.body, color: colors.textPlaceholder },
+  images: { paddingHorizontal: 24, gap: 12 },
+  agree: { paddingHorizontal: 16 },
+  agreeText: { flex: 1, ...typography.smallMedium, lineHeight: 20, color: colors.textMuted },
+  agreeError: { color: colors.danger },
+  agreeLink: { color: colors.primary, textDecorationLine: 'underline' },
 });

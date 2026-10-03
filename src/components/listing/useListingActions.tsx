@@ -13,27 +13,27 @@ import type { ListingSummary } from '@/types/domain';
  * Sahibin öz elanı üzərində əməliyyatlar (BRD V): redaktə, yenilə (yalnız müddəti bitmiş),
  * irəli çək (yalnız aktiv), sil (geri dönməz). Figma-da yeri olmadığı üçün kartdakı ⋮ menyusundan açılır.
  */
-export function useListingActions() {
+export function useListingActions({ onDeleted }: { onDeleted?: () => void } = {}) {
   const router = useRouter();
   const qc = useQueryClient();
   const toast = useToast();
   const startDraft = useListingDraft((s) => s.start);
   const [target, setTarget] = useState<ListingSummary | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<ListingSummary | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
   const refresh = () => qc.invalidateQueries({ queryKey: ['listings', 'mine'] });
 
   const close = () => setTarget(null);
 
-  const edit = async (item: ListingSummary) => {
+  const edit = async (item: { id: string }) => {
     close();
     try {
       const full = await api.listings.byId(item.id);
       startDraft(full.id, {
         categoryId: full.categoryId, subcategoryId: full.subcategoryId, subsubId: full.subsubId, type: full.type,
         price: full.price != null ? String(full.price) : '', negotiable: full.negotiable, city: full.city,
-        title: full.title, description: full.description, whatsapp: full.whatsapp.replace('+994', ''),
+        title: full.title, contactName: full.sellerName, description: full.description, whatsapp: full.whatsapp.replace('+994', ''),
         images: full.images, videoUri: full.videoUrl,
         fields: Object.fromEntries(Object.entries(full.fields).map(([k, v]) => [k, String(v)])), agreed: true,
       });
@@ -61,6 +61,7 @@ export function useListingActions() {
       await api.listings.remove(confirmDelete.id);
       await refresh();
       setConfirmDelete(null);
+      onDeleted?.();
     } catch (e) {
       toast(e instanceof ApiError ? e.message : t.common.error, 'error');
     } finally {
@@ -107,14 +108,16 @@ export function useListingActions() {
         visible={confirmDelete != null}
         onClose={() => setConfirmDelete(null)}
         onConfirm={remove}
-        title={t.common.delete}
-        message={t.listing.deleteConfirm}
-        confirmText={t.common.delete}
+        title={t.listing.deleteTitle}
+        heading={t.listing.deleteQuestion}
+        message={t.listing.deleteWarning}
+        warning
+        confirmText={t.listing.deleteConfirmYes}
         danger
         loading={busy}
       />
     </>
   );
 
-  return { open: setTarget, sheets };
+  return { open: setTarget, edit, askDelete: setConfirmDelete, sheets };
 }

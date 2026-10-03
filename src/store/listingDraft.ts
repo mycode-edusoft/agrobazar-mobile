@@ -10,6 +10,8 @@ export interface ListingDraft {
   negotiable: boolean;
   city: string;
   title: string;
+  /** Figma "Əlaqə adı (ad soyad)" — backend contact_name */
+  contactName: string;
   description: string;
   whatsapp: string;
   images: string[];
@@ -27,6 +29,7 @@ const empty: ListingDraft = {
   negotiable: false,
   city: '',
   title: '',
+  contactName: '',
   description: '',
   whatsapp: '',
   images: [],

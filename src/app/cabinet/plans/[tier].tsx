@@ -3,30 +3,34 @@ import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { TierBadge } from '@/components/plans/TierBadge';
-import { AppText, BottomSheet, Button, Card, FooterBar, Screen, ScreenHeader, VerifyingOverlay, useToast } from '@/components/ui';
+import { PlanSheet, SheetSection } from '@/components/plans/PlanSheet';
+import { AppText, BottomSheet, Button, Divider, FooterBar, Screen, ScreenHeader, VerifyingOverlay, useToast } from '@/components/ui';
 import { t } from '@/i18n/az';
 import { formatAmount } from '@/lib/format';
 import { usePaymentFlow } from '@/lib/payment';
+import { planPrice } from '@/lib/plans';
 import { qk } from '@/lib/queries';
 import { api, ApiError } from '@/services';
 import { useAuthStore } from '@/store/auth';
-import { colors, layout, radii } from '@/theme';
-import type { BillingCycle, PaymentMethod, PlanTier } from '@/types/domain';
+import { colors, typography } from '@/theme';
+import type { BillingCycle, PaymentMethod, PlanTier, UserType } from '@/types/domain';
 
+/** Figma tarif səhifəsi: tarif rəngli fon, "Tarifə daxildir" siyahısı, altda "Məbləğ" + ödəniş düyməsi */
 export default function PlanPurchaseScreen() {
   const router = useRouter();
   const toast = useToast();
-  const { tier, planId, cycle } = useLocalSearchParams<{ tier: PlanTier; planId: string; cycle: BillingCycle }>();
+  const { tier, planId, cycle, userType } = useLocalSearchParams<{ tier: PlanTier; planId: string; cycle: BillingCycle; userType?: UserType }>();
   const user = useAuthStore((s) => s.user);
   const { verifying, complete } = usePaymentFlow();
   const [methodOpen, setMethodOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const plans = useQuery({ queryKey: qk.plans(user?.type ?? 'individual'), queryFn: () => api.plans.plans(user?.type ?? 'individual') });
+  const type = userType ?? user?.type ?? 'individual';
+  const plans = useQuery({ queryKey: qk.plans(type), queryFn: () => api.plans.plans(type) });
   const plan = plans.data?.find((p) => p.id === planId);
-  const tint = colors.tier[tier ?? 'green'];
-  const price = plan ? (cycle === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice) : 0;
+  const { price, old } = plan ? planPrice(plan, cycle ?? 'monthly') : { price: 0, old: null };
+  // Başqa hesab tipinin tarifi yalnız məlumat üçündür (BRD: tarif hesab tipinə bağlıdır)
+  const foreign = !!user && user.type !== type;
 
   const purchase = async (method: PaymentMethod) => {
     if (!plan) return;
@@ -52,52 +56,58 @@ export default function PlanPurchaseScreen() {
   return (
     <Screen
       header={<ScreenHeader title={t.cabinet.plans} />}
-      background={tint.to}
+      background={colors.tier[tier ?? 'green'].text}
       scroll
-      padded
+      contentStyle={styles.grow}
       footer={
         <FooterBar style={styles.footer}>
           <View style={styles.amountRow}>
-            <AppText variant="body" color={colors.textMuted}>
-              {t.plans.amount}
-            </AppText>
-            <AppText variant="bodyBold">{formatAmount(price)}</AppText>
+            <AppText style={[styles.amount, styles.flex]}>{t.plans.amount}</AppText>
+            {old != null ? <AppText style={styles.old}>{formatAmount(old)}</AppText> : null}
+            <AppText style={styles.amount}>{formatAmount(price)}</AppText>
           </View>
-          <Button title={t.plans.buy} onPress={() => setMethodOpen(true)} loading={loading} disabled={!plan} />
+          <Button
+            title={t.plans.buy}
+            onPress={() => (user ? setMethodOpen(true) : router.push('/auth/phone'))}
+            loading={loading}
+            disabled={!plan || foreign}
+          />
         </FooterBar>
       }
     >
       {plan ? (
-        <Card style={styles.card}>
-          <View style={styles.badge}>
-            <TierBadge tier={tier} size={56} />
-          </View>
-          <AppText variant="buttonLarge" color={tint.text} center>
-            {plan.name}
-          </AppText>
-          <AppText variant="caption" color={colors.textMuted} center>
-            {t.cabinet.userType[plan.userType]} · {cycle === 'yearly' ? t.plans.yearly : t.plans.monthly}
-          </AppText>
-          <AppText variant="bodyBold" color={colors.textSecondary} style={styles.includes}>
-            {t.plans.includes}
-          </AppText>
-          {plan.benefits.map((b) => (
-            <View key={b} style={styles.benefit}>
-              <Ionicons name="checkmark-circle" size={20} color={colors.successAlt} />
-              <AppText variant="body" color={colors.textSecondary}>
-                {b}
-              </AppText>
+        <PlanSheet tier={plan.tier} name={plan.name} popular={plan.popular}>
+          <SheetSection>
+            <Divider />
+            <AppText variant="bodyBold" color={colors.textSecondary}>
+              {t.plans.includes}
+            </AppText>
+            <View style={styles.benefits}>
+              {plan.benefits.map((b) => (
+                <View key={b} style={styles.benefit}>
+                  <View style={styles.tick}>
+                    <Ionicons name="checkmark" size={12} color={colors.surface} />
+                  </View>
+                  <AppText style={styles.benefitText}>{b}</AppText>
+                </View>
+              ))}
             </View>
-          ))}
-          <AppText variant="caption" color={colors.textMuted} style={styles.note}>
-            {t.plans.subtitleHint}
-          </AppText>
-        </Card>
+            <AppText variant="caption" color={colors.textMuted}>
+              {foreign ? t.plans.foreignType(t.cabinet.userType[user!.type]) : t.plans.subtitleHint}
+            </AppText>
+          </SheetSection>
+        </PlanSheet>
       ) : null}
 
       <BottomSheet visible={methodOpen} onClose={() => setMethodOpen(false)} title={t.plans.buy}>
-        <Button title={`${t.balance.title} (${formatAmount(user?.balance ?? 0)})`} variant="outline" size="lg" onPress={() => purchase('balance')} disabled={(user?.balance ?? 0) < price} />
-        <Button title="Kartla ödə" onPress={() => purchase('card')} />
+        <Button
+          title={`${t.balance.title} (${formatAmount(user?.balance ?? 0)})`}
+          variant="outline"
+          size="lg"
+          onPress={() => purchase('balance')}
+          disabled={(user?.balance ?? 0) < price}
+        />
+        <Button title={t.promote.card} onPress={() => purchase('card')} />
       </BottomSheet>
       <VerifyingOverlay visible={verifying} title={t.balance.verifying} hint={t.balance.verifyingHint} />
     </Screen>
@@ -105,11 +115,17 @@ export default function PlanPurchaseScreen() {
 }
 
 const styles = StyleSheet.create({
-  card: { marginTop: 24, gap: 10, paddingTop: 40, marginBottom: layout.screenPadding },
-  badge: { position: 'absolute', top: -28, alignSelf: 'center', left: 0, right: 0, alignItems: 'center' },
-  includes: { paddingTop: 12 },
-  benefit: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  note: { paddingTop: 8 },
-  footer: { borderTopLeftRadius: radii.md, borderTopRightRadius: radii.md },
-  amountRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  flex: { flex: 1 },
+  grow: { flexGrow: 1, paddingBottom: 0 },
+  benefits: { gap: 4 },
+  // Figma "Benefit": 40px sətir, 18px yaşıl (#0BBA20) dairəvi ✓, 16/19 #595959
+  benefit: { minHeight: 40, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  tick: { width: 18, height: 18, borderRadius: 9, backgroundColor: '#0BBA20', alignItems: 'center', justifyContent: 'center' },
+  benefitText: { flex: 1, ...typography.body, lineHeight: 19, color: colors.textSecondary },
+  // Figma: ağ panel, yuxarı radius 14, kölgə 0 0 4 .08; "Məbləğ" sətri 52px, sonra 56px düymə
+  // Figma-da panel radius 14-dür, amma ağ kartın üstündədir — fon rəngli künclər görünməsin deyə düz
+  footer: { shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 },
+  amountRow: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 14, paddingLeft: 12, paddingRight: 16 },
+  amount: { fontFamily: typography.bodyBold.fontFamily, fontSize: 14, lineHeight: 22, color: colors.textSecondary },
+  old: { ...typography.caption, lineHeight: 16, color: 'rgba(157, 164, 174, 0.71)', textDecorationLine: 'line-through' },
 });

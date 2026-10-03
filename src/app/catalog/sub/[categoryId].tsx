@@ -8,6 +8,7 @@ import { t } from '@/i18n/az';
 import { openSubcategoryFlow } from '@/lib/catalogNav';
 import { useCategory } from '@/lib/queries';
 import { useFilterDraft } from '@/store/filterDraft';
+import { useListingDraft } from '@/store/listingDraft';
 import { colors, layout, shadows, typography } from '@/theme';
 
 /** Figma "App 2 → Kataloq step 15": kateqoriyanın alt kateqoriyaları, kart içində axtarış + siyahı. */
@@ -16,6 +17,9 @@ export default function SubcategoryScreen() {
   // mode=filter — Filter ekranının Kateqoriya seçimindən açılıb: seçim filter qaralamasına yazılır
   const { categoryId, mode } = useLocalSearchParams<{ categoryId: string; mode?: string }>();
   const forFilter = mode === 'filter';
+  // mode=create — "Yeni elan" axını (Figma: Business account / Elan yerləşdir): seçim elan qaralamasına yazılır
+  const forCreate = mode === 'create';
+  const setSubcategory = useListingDraft((s) => s.setSubcategory);
   const patchDraft = useFilterDraft((s) => s.patch);
   const { category } = useCategory(categoryId);
   const [q, setQ] = useState('');
@@ -43,6 +47,12 @@ export default function SubcategoryScreen() {
                 style={styles.row}
                 onPress={() => {
                   const hasTypes = item.subsubcategories.length > 0;
+                  if (forCreate) {
+                    setSubcategory(item.id);
+                    return hasTypes
+                      ? router.push({ pathname: '/catalog/types', params: { categoryId, subcategoryId: item.id, mode: 'create' } })
+                      : router.push('/listing/create/form');
+                  }
                   if (!forFilter) return openSubcategoryFlow(router, categoryId, item.id, hasTypes);
                   patchDraft({ categoryId, subcategoryId: item.id, subsubIds: undefined });
                   if (hasTypes) {

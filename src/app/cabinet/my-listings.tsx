@@ -23,7 +23,7 @@ export default function MyListingsScreen() {
 
   return (
     <Screen header={<ScreenHeader title={t.cabinet.myListings} />}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsWrap} contentContainerStyle={styles.tabs}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsWrap} contentContainerStyle={[styles.tabs, styles.dim]}>
         {MY_LISTING_TABS.map((s) => (
           <Pill key={s} variant="outline" label={t.listing.status[s]} active={status === s} onPress={() => setStatus(s)} />
         ))}
@@ -49,7 +49,9 @@ export default function MyListingsScreen() {
 
 const styles = StyleSheet.create({
   tabsWrap: { flexGrow: 0, backgroundColor: colors.surface },
+  // Figma: çip sırası opacity .8
   tabs: { paddingHorizontal: layout.screenPadding, paddingTop: 16, paddingBottom: 16, gap: 10 },
   emptyWrap: { flex: 1, padding: layout.screenPadding },
   grid: { paddingTop: 16 },
+  dim: { opacity: 0.8 },
 });

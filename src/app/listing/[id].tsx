@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, Dimensions, FlatList, Linking, Pressable, Share, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import { ChartIcon, DeleteIcon, EditSquareIcon } from '@/components/icons/BadgeIcons';
+import { useListingActions } from '@/components/listing/useListingActions';
 import { AppText, Button, Divider, FooterBar, IconButton, Screen } from '@/components/ui';
 import { t } from '@/i18n/az';
 import { formatDate, formatPrice } from '@/lib/format';
@@ -26,6 +28,7 @@ export default function ListingDetailScreen() {
   const user = useAuthStore((s) => s.user);
   const [index, setIndex] = useState(0);
   const [expanded, setExpanded] = useState(false);
+  const actions = useListingActions({ onDeleted: () => router.back() });
 
   if (isLoading || !listing) {
     return (
@@ -40,14 +43,17 @@ export default function ListingDetailScreen() {
   const subsub = subcategory?.subsubcategories.find((b) => b.id === listing.subsubId);
   const fieldDefs = subcategory?.fields ?? [];
 
+  // Figma: yuxarıda kateqoriya cədvəli, dinamik sahələr "Xüsusiyyətlər" qutusunda, sonda satıcı + meta
   const rows: { label: string; value: string }[] = [
     { label: t.listing.city, value: listing.city },
     ...(category ? [{ label: t.listing.topCategory, value: category.name }] : []),
     ...(subcategory ? [{ label: t.listing.category, value: subcategory.name }] : []),
-    ...(subsub ? [{ label: t.listing.subsubcategory, value: subsub.name }] : []),
-    ...fieldDefs
-      .filter((f) => listing.fields[f.key] != null && listing.fields[f.key] !== '')
-      .map((f) => ({ label: f.label, value: `${listing.fields[f.key]}${f.unit ? ` ${f.unit}` : ''}` })),
+    ...(subsub ? [{ label: t.listing.productCategory, value: subsub.name }] : []),
+  ];
+  const features = fieldDefs
+    .filter((f) => listing.fields[f.key] != null && listing.fields[f.key] !== '')
+    .map((f) => `${f.label}: ${listing.fields[f.key]}${f.unit ? ` ${f.unit}` : ''}`);
+  const meta: { label: string; value: string }[] = [
     { label: t.listing.number, value: listing.id.replace(/\D/g, '') || listing.id },
     { label: t.listing.views, value: String(listing.views) },
     { label: t.listing.updated, value: formatDate(listing.updatedAt) },
@@ -81,10 +87,10 @@ export default function ListingDetailScreen() {
           renderItem={({ item }) => <Image source={item} style={styles.image} contentFit="cover" transition={150} />}
         />
         {listing.images.length > 1 ? (
-          <View style={styles.dots}>
-            {listing.images.map((_, i) => (
-              <View key={i} style={[styles.dot, i === index && styles.dotActive]} />
-            ))}
+          <View style={styles.counter}>
+            <AppText variant="caption" color={colors.surface}>
+              {index + 1}/{listing.images.length}
+            </AppText>
           </View>
         ) : null}
         <View style={styles.galleryBar}>
@@ -92,25 +98,49 @@ export default function ListingDetailScreen() {
             <Icon name="chevron" direction="left" size={18} color={colors.textMuted} />
           </IconButton>
           <View style={styles.galleryRight}>
-            <IconButton onPress={share} accessibilityLabel="Paylaş">
+            <IconButton onPress={share} accessibilityLabel={t.listing.share}>
               <Ionicons name="share-outline" size={16} color={colors.textMuted} />
             </IconButton>
-            <IconButton
-              onPress={() => toggleFav(listing.id).catch(() => undefined)}
-              accessibilityLabel={t.tabs.favorites}
-              style={isFav ? styles.favActive : undefined}
-            >
-              <Icon name="heart" size={16} color={isFav ? colors.surface : colors.textMuted} />
-            </IconButton>
+            {/* Öz elanını seçilmişlərə əlavə etmək mənasızdır — Figma-da sahibə yalnız paylaş göstərilir */}
+            {!isOwner ? (
+              <IconButton
+                onPress={() => toggleFav(listing.id).catch(() => undefined)}
+                accessibilityLabel={t.tabs.favorites}
+                style={isFav ? styles.favActive : undefined}
+              >
+                <Icon name="heart" size={16} color={isFav ? colors.surface : colors.textMuted} />
+              </IconButton>
+            ) : null}
           </View>
         </View>
       </View>
 
       <View style={styles.body}>
         <View style={styles.titleBlock}>
-          <AppText variant="bodyBold" style={styles.tight}>
-            {formatPrice(listing.price, listing.negotiable)}{listing.price != null ? ` ${t.common.currency}` : ''}
-          </AppText>
+          <View style={styles.priceRow}>
+            <AppText variant="bodyBold" style={[styles.tight, styles.flex]}>
+              {formatPrice(listing.price, listing.negotiable)}{listing.price != null ? ` ${t.common.currency}` : ''}
+            </AppText>
+            {isOwner ? (
+              <View style={styles.ownerActions}>
+                <OwnerAction
+                  label={t.listing.stats}
+                  onPress={() => router.push({ pathname: '/listing/stats', params: { id: listing.id } })}
+                  icon={<ChartIcon size={18} color={colors.textMuted} />}
+                />
+                <OwnerAction
+                  label={t.listing.edit}
+                  onPress={() => actions.edit(listing)}
+                  icon={<EditSquareIcon size={18} color={colors.textMuted} />}
+                />
+                <OwnerAction
+                  label={t.common.delete}
+                  onPress={() => actions.askDelete(listing)}
+                  icon={<DeleteIcon size={18} color={DELETE_RED} />}
+                />
+              </View>
+            ) : null}
+          </View>
           <AppText variant="body" style={styles.tight}>
             {listing.title}
           </AppText>
@@ -152,7 +182,24 @@ export default function ListingDetailScreen() {
             </View>
           ))}
           <Divider />
-          <View style={styles.about}>
+          {features.length > 0 ? (
+            <View style={styles.section}>
+              <AppText variant="bodyBold" color={colors.textSecondary}>
+                {t.listing.features}
+              </AppText>
+              <View style={styles.features}>
+                {features.map((f, i) => (
+                  <View key={f} style={styles.featureItem}>
+                    {i > 0 ? <View style={styles.featureSep} /> : null}
+                    <AppText variant="small" color={colors.textMuted} style={styles.featureText}>
+                      {f}
+                    </AppText>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ) : null}
+          <View style={styles.section}>
             <AppText variant="bodyBold" color={colors.textSecondary}>
               {t.listing.about}
             </AppText>
@@ -185,9 +232,31 @@ export default function ListingDetailScreen() {
               </AppText>
             </View>
           </Pressable>
+          {meta.map((r) => (
+            <View key={r.label} style={styles.infoRow}>
+              <AppText variant="body" color={colors.textMuted} style={styles.infoLabel}>
+                {r.label}
+              </AppText>
+              <AppText variant="body" style={styles.flex}>
+                {r.value}
+              </AppText>
+            </View>
+          ))}
         </View>
       </View>
+      {actions.sheets}
     </Screen>
+  );
+}
+
+// Figma: 32×32, rgba(0,0,0,.08), radius 8, 18px Iconly ikon; silmə qırmızı #DC0812
+const DELETE_RED = '#DC0812';
+
+function OwnerAction({ icon, label, onPress }: { icon: ReactNode; label: string; onPress(): void }) {
+  return (
+    <Pressable onPress={onPress} style={styles.ownerAction} accessibilityLabel={label} hitSlop={4}>
+      {icon}
+    </Pressable>
   );
 }
 
@@ -223,9 +292,19 @@ const styles = StyleSheet.create({
   },
   gallery: { width, height: 320, backgroundColor: colors.background },
   image: { width, height: 320 },
-  dots: { position: 'absolute', bottom: 12, alignSelf: 'center', flexDirection: 'row', gap: 6 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.6)' },
-  dotActive: { backgroundColor: colors.surface, width: 16 },
+  counter: {
+    position: 'absolute', bottom: 12, alignSelf: 'center', paddingHorizontal: 10, borderRadius: 100,
+    backgroundColor: 'rgba(38, 38, 38, 0.45)',
+  },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 24, minHeight: 32 },
+  ownerActions: { flexDirection: 'row', gap: 12 },
+  ownerAction: { width: 32, height: 32, borderRadius: 8, backgroundColor: 'rgba(0, 0, 0, 0.08)', alignItems: 'center', justifyContent: 'center' },
+  section: { gap: 12 },
+  // Figma "Xüsusiyyətlər": #F5F5F5 qutu, padding 16, elementlər arası 18px şaquli ayırıcı
+  features: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', rowGap: 4, padding: 16, borderRadius: 8, backgroundColor: colors.background },
+  featureItem: { flexDirection: 'row', alignItems: 'center' },
+  featureSep: { width: 1, height: 18, marginHorizontal: 8, backgroundColor: 'rgba(0, 0, 0, 0.08)' },
+  featureText: { lineHeight: 22 },
   galleryBar: {
     position: 'absolute', top: 48, left: layout.screenPadding, right: layout.screenPadding,
     flexDirection: 'row', justifyContent: 'space-between',
@@ -239,7 +318,6 @@ const styles = StyleSheet.create({
   info: { paddingHorizontal: layout.screenPadding, gap: 16 },
   infoRow: { flexDirection: 'row', alignItems: 'flex-start' },
   infoLabel: { width: 172 },
-  about: { gap: 12 },
   more: { alignSelf: 'flex-start', height: 32, justifyContent: 'center', paddingHorizontal: 12, marginLeft: -12 },
   sellerValue: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 4 },
   sellerAvatar: {

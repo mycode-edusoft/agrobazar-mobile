@@ -12,13 +12,15 @@ interface Props {
   regions: string[];
   value: string | null;
   onSelect(region: string): void;
+  /** Panel başlığı — default "Bölgə"; Yeni elanda eyni panel "Marka" kimi seçimlər üçün də işlənir */
+  title?: string;
 }
 
 /**
  * Figma "Filter → Bölgə" alt paneli: başlıq + ×, xətt, axtarış (yazanda × təmizləmə),
  * siyahı (aralar 32), seçilmiş bölgənin yanında yaşıl ✓. Toxunmaq seçir və paneli bağlayır.
  */
-export function RegionSheet({ visible, onClose, regions, value, onSelect }: Props) {
+export function RegionSheet({ visible, onClose, regions, value, onSelect, title = t.filter.region }: Props) {
   const [q, setQ] = useState('');
   const items = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -26,7 +28,7 @@ export function RegionSheet({ visible, onClose, regions, value, onSelect }: Prop
   }, [regions, q]);
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} title={t.filter.region} height="85%">
+    <BottomSheet visible={visible} onClose={onClose} title={title} height="85%">
       <View style={styles.search}>
         <Icon name="search" size={18} color={colors.textMuted} />
         <TextInput

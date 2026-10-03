@@ -8,6 +8,7 @@ import { t } from '@/i18n/az';
 import { useCategory } from '@/lib/queries';
 import { useFilterStore } from '@/store/filter';
 import { useFilterDraft } from '@/store/filterDraft';
+import { useListingDraft } from '@/store/listingDraft';
 import { colors, layout, shadows, typography } from '@/theme';
 
 /** Figma "App 2 → Kataloq step 13": alt kateqoriyanın növləri çip kimi + "Elanı göstər". */
@@ -16,6 +17,10 @@ export default function SubsubcategoryScreen() {
   const { categoryId, subcategoryId, mode } = useLocalSearchParams<{ categoryId: string; subcategoryId: string; mode?: string }>();
   // mode=filter — "Kataloq step 14": düymə "Tətbiq et", seçim Filter qaralamasına yazılıb Filter-ə qayıdılır
   const forFilter = mode === 'filter';
+  // mode=create — "Yeni elan": tək növ seçilməlidir (backend elanı növə bağlayır), düymə "Davam et" → forma
+  const forCreate = mode === 'create';
+  const listingSubsub = useListingDraft((s) => s.draft.subsubId);
+  const setListing = useListingDraft((s) => s.set);
   const draft = useFilterDraft((s) => s.draft);
   const patchDraft = useFilterDraft((s) => s.patch);
   const { category } = useCategory(categoryId);
@@ -24,7 +29,7 @@ export default function SubsubcategoryScreen() {
   const [q, setQ] = useState('');
   // Dizaynda bir çip seçili göstərilir; "Hamısı" = növ məhdudiyyəti yoxdur
   const [selected, setSelected] = useState<string | null>(
-    forFilter && draft.subcategoryId === subcategoryId ? draft.subsubIds?.[0] ?? null : null,
+    forCreate ? listingSubsub : forFilter && draft.subcategoryId === subcategoryId ? draft.subsubIds?.[0] ?? null : null,
   );
 
   const types = useMemo(() => {
@@ -34,6 +39,12 @@ export default function SubsubcategoryScreen() {
   }, [sub, q]);
 
   const show = () => {
+    if (forCreate) {
+      if (!selected) return;
+      setListing({ subsubId: selected });
+      router.push('/listing/create/form');
+      return;
+    }
     if (forFilter) {
       patchDraft({ categoryId, subcategoryId, subsubIds: selected ? [selected] : undefined });
       router.dismissTo('/catalog/filter');
@@ -48,7 +59,11 @@ export default function SubsubcategoryScreen() {
       header={<ScreenHeader title={category?.name ?? t.catalog.title} />}
       footer={
         <FooterBar style={styles.footer}>
-          <Button title={forFilter ? t.common.apply : t.catalog.showListings} onPress={show} />
+          <Button
+            title={forCreate ? t.common.continue : forFilter ? t.common.apply : t.catalog.showListings}
+            onPress={show}
+            disabled={forCreate && !selected}
+          />
         </FooterBar>
       }
     >
@@ -60,13 +75,13 @@ export default function SubsubcategoryScreen() {
           <ScrollView contentContainerStyle={[styles.pad, styles.section]} keyboardShouldPersistTaps="handled">
             {sub ? <AppText style={styles.label}>{`${sub.name}:`}</AppText> : null}
             <View style={styles.chips}>
-              {!q.trim() ? <SelectChip label={t.common.all} active={selected == null} onPress={() => setSelected(null)} /> : null}
+              {!q.trim() && !forCreate ? <SelectChip label={t.common.all} active={selected == null} onPress={() => setSelected(null)} /> : null}
               {types.map((s) => (
                 <SelectChip
                   key={s.id}
                   label={s.name}
                   active={selected === s.id}
-                  onPress={() => setSelected(selected === s.id ? null : s.id)}
+                  onPress={() => setSelected(forCreate ? s.id : selected === s.id ? null : s.id)}
                 />
               ))}
             </View>

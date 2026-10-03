@@ -90,18 +90,20 @@ interface SegmentProps<T extends string> {
   options: { value: T; label: string }[];
   value: T;
   onChange(v: T): void;
+  /** Figma "24 saat / 7 gün / 30 gün": 48px seqmentlər, radius 4, kölgəsiz */
+  tall?: boolean;
 }
 
-export function SegmentedControl<T extends string>({ options, value, onChange }: SegmentProps<T>) {
+export function SegmentedControl<T extends string>({ options, value, onChange, tall }: SegmentProps<T>) {
   return (
-    <View style={styles.segment}>
+    <View style={[styles.segment, tall && styles.segmentTall]}>
       {options.map((o) => {
         const active = o.value === value;
         return (
           <Pressable
             key={o.value}
             onPress={() => onChange(o.value)}
-            style={[styles.segmentItem, active && styles.segmentItemActive]}
+            style={[styles.segmentItem, tall && styles.segmentItemTall, active && styles.segmentItemActive, active && tall && styles.segmentItemFlat]}
           >
             <AppText variant="smallMedium" color={active ? colors.primary : colors.textMuted}>
               {o.label}
@@ -240,6 +242,9 @@ const styles = StyleSheet.create({
   segment: { flexDirection: 'row', backgroundColor: colors.background, borderRadius: radii.sm, padding: 4 },
   segmentItem: { flex: 1, height: 36, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
   segmentItemActive: { backgroundColor: colors.surface, ...shadows.smallButton },
+  segmentTall: { backgroundColor: 'rgba(140, 140, 140, 0.08)' },
+  segmentItemTall: { height: 48, borderRadius: 4 },
+  segmentItemFlat: { shadowOpacity: 0, elevation: 0 },
 
   // Figma: geri düyməsi ilə sahə arası 16, sahə ilə filtr arası 10; hündürlük 38
   searchRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },

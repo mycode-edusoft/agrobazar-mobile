@@ -46,13 +46,13 @@ export function ImagesPicker({ uris, onChange, max, min, hint, maxBytes, error }
           <View key={uri} style={styles.thumb}>
             <Image source={uri} style={styles.thumbImg} contentFit="cover" />
             <Pressable onPress={() => onChange(uris.filter((u) => u !== uri))} style={styles.remove} hitSlop={6}>
-              <Ionicons name="close" size={12} color={colors.surface} />
+              <Ionicons name="close" size={14} color={colors.surface} />
             </Pressable>
           </View>
         ))}
         {uris.length < max ? (
           <Pressable onPress={pick} style={[styles.thumb, styles.add, !!error && styles.addError]}>
-            <Ionicons name="camera-outline" size={26} color={colors.textMuted} />
+            <Ionicons name="camera-outline" size={26} color="#959595" />
             <AppText variant="caption" color={colors.textMuted}>
               {uris.length}/{max}
             </AppText>
@@ -160,19 +160,20 @@ export function VideoPicker({ uri, onChange, label, maxBytes }: VideoProps) {
   );
 }
 
-const THUMB = 96;
+// Figma "Yeni elan" şəkilləri: 130×130, radius 14, haşiyə #C4C4C4; əlavə et plitəsi #EAEAEA, qırıq haşiyə
+const THUMB = 130;
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   wrap: { gap: 8 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  thumb: { width: THUMB, height: THUMB, borderRadius: radii.sm, overflow: 'hidden', backgroundColor: colors.background },
-  thumbImg: { width: '100%', height: '100%' },
-  add: { alignItems: 'center', justifyContent: 'center', gap: 4, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.textPlaceholder },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
+  thumb: { width: THUMB, height: THUMB, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: '#C4C4C4' },
+  thumbImg: { width: '100%', height: '100%', borderRadius: 13 },
+  add: { alignItems: 'center', justifyContent: 'center', gap: 4, borderStyle: 'dashed', backgroundColor: '#EAEAEA' },
   addError: { borderColor: colors.danger },
   remove: {
-    position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: 10,
-    backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center',
+    position: 'absolute', top: -8, right: -8, width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: colors.surface,
+    backgroundColor: 'rgba(0,0,0,0.54)', alignItems: 'center', justifyContent: 'center',
   },
   single: {
     width: 120, height: 120, borderRadius: radii.sm, backgroundColor: colors.background, overflow: 'hidden',

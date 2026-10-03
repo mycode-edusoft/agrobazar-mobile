@@ -10,6 +10,7 @@ import type {
   PromotionKind,
   PromotionOption,
   Listing,
+  ListingInsights,
   ListingFilter,
   ListingSummary,
   PaymentStatus,
@@ -288,6 +289,12 @@ export const mockApi: Api = {
       const slice = items.slice(start, start + pageSize).map(summary);
       return { items: slice, total: items.length, page, hasMore: start + pageSize < items.length };
     },
+    async premiumPage(page) {
+      const all = await this.premium();
+      const size = 8;
+      const start = (page - 1) * size;
+      return { items: all.slice(start, start + size), total: all.length, page, hasMore: start + size < all.length };
+    },
     async premium(filter) {
       const categoryId = filter?.categoryId;
       await delay(200);
@@ -313,6 +320,13 @@ export const mockApi: Api = {
       if (!l) throw new ApiError('Elan tapılmadı', 'not_found', 404);
       l.views += 1;
       return l;
+    },
+    async insights(id) {
+      await delay(300);
+      requireAuth();
+      const l = state.myListings.find((x) => x.id === id);
+      if (!l) throw new ApiError('Elan tapılmadı', 'not_found', 404);
+      return mockInsights(l.views);
     },
     async mine(status) {
       await delay(200);
@@ -497,6 +511,7 @@ export const mockApi: Api = {
         tiktok: input.tiktok,
         youtube: input.youtube,
         workingHours: input.workingHours,
+        schedule: input.schedule ?? null,
         status: 'pending',
         activeListingsCount: 0,
         totalViews: 0,
@@ -709,4 +724,49 @@ function applyFilter(items: Listing[], f: ListingFilter): Listing[] {
     return Math.max(bumpB, new Date(b.createdAt).getTime()) - Math.max(bumpA, new Date(a.createdAt).getTime());
   });
   return out;
+}
+
+// Statistika demo dəyərləri — real backend sxeminə uyğun (bax http/listings.ts mapInsights)
+function mockInsights(views: number): ListingInsights {
+  const wave = (n: number, scale: number) =>
+    Array.from({ length: n }, (_, i) => Math.max(0, Math.round(scale * (0.4 + 0.6 * (i / (n - 1))) + 3 * Math.sin(i * 1.7))));
+  const days = (n: number) =>
+    Array.from({ length: n }, (_, i) => {
+      const d = new Date(Date.now() - (n - 1 - i) * 86_400_000);
+      return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
+    });
+  const zip = (labels: string[], values: number[]) => labels.map((label, i) => ({ label, value: values[i] }));
+  return {
+    tariffCode: 'premium',
+    descriptions: {
+      views_last_24h: 'Son 24 saat ərzində elanınızın ümumi neçə dəfə baxıldığını göstərir.',
+      ctr: 'Siyahıda elan kartınız görünəndən sonra istifadəçilərin neçə faizi elanın tam səhifəsini açıb.',
+    },
+    viewsLast24h: Math.min(views, 12),
+    viewsLast7d: Math.min(views, 64),
+    viewsLast30d: views,
+    bestWeekday: 2,
+    bestHour: 19,
+    peakInterval: { start: 18, end: 22 },
+    ctr: 0.008,
+    topViewedImage: 1,
+    avgLastImagePosition: 3.4,
+    lastImageReachRate: 0.42,
+    galleryToDetailRatio: 2.1,
+    contactsLast24h: 1,
+    contactsLast7d: 6,
+    favoritesLast7d: 3,
+    categoryRankBand: 'top_20',
+    categoryAvgViews: 1015.846,
+    categoryViewsRatio: 0.1,
+    priceBucketAvgViews: 992.672,
+    premiumImpact: { diff: { '24h': -4, '7d': 12, '30d': 40 }, pct: { '24h': -100, '7d': 35.5, '30d': 22 } },
+    vipImpact: null,
+    bumpImpact: null,
+    series: {
+      '24h': zip(Array.from({ length: 8 }, (_, i) => `${String(i * 3).padStart(2, '0')}:00`), wave(8, 6)),
+      '7d': zip(days(7), wave(7, 14)),
+      '30d': zip(days(30), wave(30, 20)),
+    },
+  };
 }

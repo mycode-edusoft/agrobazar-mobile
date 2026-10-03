@@ -1,5 +1,6 @@
 import type { Store } from '@/types/domain';
 import { ApiError, type ContactApi, type CreateStoreInput, type StoreApi } from '../api';
+import { formatWeek, parseWeek } from '@/lib/storeHours';
 import { request, unwrapList } from './client';
 import { mapSummary, type ApiListing } from './mappers';
 
@@ -61,6 +62,7 @@ function mapRow(s: ApiStoreRow): Store {
     tiktok: s.tiktok || null,
     youtube: s.youtube || null,
     workingHours: parseHours(s.business_hours),
+    schedule: parseWeek(s.business_hours),
     status: s.is_approved === false && s.status !== 'approved' ? 'pending' : 'approved',
     activeListingsCount: s.published_listings_count ?? 0,
     totalViews: s.total_views_count ?? 0,
@@ -81,9 +83,11 @@ function toPayload(input: Partial<CreateStoreInput>) {
     ...(input.instagram !== undefined ? { instagram: input.instagram ?? '' } : {}),
     ...(input.tiktok !== undefined ? { tiktok: input.tiktok ?? '' } : {}),
     ...(input.youtube !== undefined ? { youtube: input.youtube ?? '' } : {}),
-    ...(input.workingHours
-      ? { business_hours: formatHours(input.workingHours.open, input.workingHours.close) }
-      : {}),
+    ...(input.schedule
+      ? { business_hours: formatWeek(input.schedule) }
+      : input.workingHours
+        ? { business_hours: formatHours(input.workingHours.open, input.workingHours.close) }
+        : {}),
     ...(input.logoUri ? { logo: input.logoUri } : {}),
     ...(input.coverUri ? { cover_image: input.coverUri } : {}),
   };

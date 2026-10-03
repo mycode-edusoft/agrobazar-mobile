@@ -1,3 +1,4 @@
+import type { WeeklyHours } from '@/lib/storeHours';
 export type UserType = 'individual' | 'corporate';
 
 export interface User {
@@ -50,6 +51,8 @@ export interface Store {
   tiktok: string | null;
   youtube: string | null;
   workingHours: StoreWorkingHours | null;
+  /** Həftəlik qrafik (gün-gün); yoxdursa workingHours bütün günlərə aiddir */
+  schedule?: WeeklyHours | null;
   status: StoreStatus;
   activeListingsCount: number;
   totalViews: number;
@@ -289,4 +292,53 @@ export interface FavoriteStore {
   name: string;
   logoUrl: string | null;
   activeListingsCount: number;
+}
+
+// --- Elan statistikası (backend: GET plan/listings/<id>/metrics/) ---------------
+// Sahə `undefined` — metrik sahibin tarifinə daxil deyil; `null` — tarifdədir, amma hələ məlumat yoxdur.
+
+export type InsightPeriod = '24h' | '7d' | '30d';
+
+export interface PromotionImpact {
+  /** Promosiyadan əvvəl/sonra baxış fərqi */
+  diff: Record<InsightPeriod, number>;
+  /** Fərqin faizi; əvvəl 0 baxış olubsa null */
+  pct: Record<InsightPeriod, number | null>;
+}
+
+export type CategoryRankBand = 'top_10' | 'top_20' | 'top_50' | '50_plus';
+
+export interface ListingInsights {
+  tariffCode: string | null;
+  /** Metrik kodu → bir cümləlik izah (backend `metric_descriptions`) */
+  descriptions: Record<string, string>;
+  // traffic
+  viewsLast24h?: number;
+  viewsLast7d?: number;
+  viewsLast30d?: number;
+  bestWeekday?: number | null; // 0 = Bazar ertəsi
+  bestHour?: number | null;
+  peakInterval?: { start: number; end: number } | null;
+  // engagement
+  ctr?: number | null; // 0..1
+  // gallery
+  topViewedImage?: number | null;
+  avgLastImagePosition?: number | null;
+  lastImageReachRate?: number | null; // 0..1
+  galleryToDetailRatio?: number | null;
+  // contacts
+  contactsLast24h?: number;
+  contactsLast7d?: number;
+  favoritesLast7d?: number;
+  // benchmarks
+  categoryRankBand?: CategoryRankBand | null;
+  categoryAvgViews?: number | null;
+  categoryViewsRatio?: number | null;
+  priceBucketAvgViews?: number | null;
+  // promotion_impact
+  premiumImpact?: PromotionImpact | null;
+  vipImpact?: PromotionImpact | null;
+  bumpImpact?: PromotionImpact | null;
+  /** Qrafik üçün dövr üzrə baxış seriyası — backend hələ vermir (null) */
+  series: Partial<Record<InsightPeriod, { label: string; value: number }[]>> | null;
 }

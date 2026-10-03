@@ -57,7 +57,11 @@ interface ConfirmProps {
   onClose(): void;
   onConfirm(): void;
   title: string;
+  /** Figma "Hesabı sil": mesajın üstündə Bold 16 #8C8C8C sual */
+  heading?: string;
   message: string;
+  /** Mesajı ⚠️ işarəsi ilə xəbərdarlıq kimi göstər */
+  warning?: boolean;
   items?: string[];
   confirmText: string;
   cancelText?: string;
@@ -66,13 +70,27 @@ interface ConfirmProps {
 }
 
 export function ConfirmSheet({
-  visible, onClose, onConfirm, title, message, items, confirmText, cancelText = 'Ləğv et', danger, loading,
+  visible, onClose, onConfirm, title, heading, message, warning, items, confirmText, cancelText = 'Ləğv et', danger, loading,
 }: ConfirmProps) {
   return (
     <BottomSheet visible={visible} onClose={onClose} title={title}>
-      <AppText variant="body" color={colors.textMuted}>
-        {message}
-      </AppText>
+      {heading ? (
+        <AppText variant="bodyBold" color={colors.textMuted} style={styles.heading}>
+          {heading}
+        </AppText>
+      ) : null}
+      {warning ? (
+        <View style={styles.warningRow}>
+          <AppText variant="body" color={colors.textMuted}>⚠️</AppText>
+          <AppText variant="body" color={colors.textMuted} style={styles.flex}>
+            {message}
+          </AppText>
+        </View>
+      ) : (
+        <AppText variant="body" color={colors.textMuted}>
+          {message}
+        </AppText>
+      )}
       {items?.map((item) => (
         <AppText key={item} variant="body" color={colors.textMuted}>
           {item}
@@ -108,4 +126,7 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: colors.divider },
   content: { flexShrink: 1, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12, gap: 12 },
   actions: { flexDirection: 'row', gap: 12, paddingTop: 12 },
+  // Figma: xəttdən 24 aşağı, sual ilə mətn arası 6
+  heading: { marginTop: 8, marginBottom: -6 },
+  warningRow: { flexDirection: 'row', gap: 4 },
 });

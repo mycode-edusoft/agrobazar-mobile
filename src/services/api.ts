@@ -1,3 +1,4 @@
+import type { WeeklyHours } from '@/lib/storeHours';
 import type {
   AppNotification,
   AuthSession,
@@ -8,6 +9,7 @@ import type {
   FavoriteStore,
   Listing,
   ListingFilter,
+  ListingInsights,
   NotificationSort,
   ListingStatus,
   ListingSummary,
@@ -69,6 +71,7 @@ export interface CreateListingInput {
   negotiable: boolean;
   city: string;
   title: string;
+  contactName?: string | null;
   description: string;
   whatsapp: string;
   images: string[];
@@ -80,8 +83,12 @@ export interface ListingApi {
   search(filter: ListingFilter, page: number): Promise<Paginated<ListingSummary>>;
   /** Süzgəcsiz — ana səhifə (backend ədalətli sıralama); süzgəclə — kateqoriya/alt kateqoriya/növ üzrə */
   premium(filter?: ListingFilter): Promise<ListingSummary[]>;
+  /** Ana səhifənin sonsuz premium lenti — backend ədalətli sıralaması ilə, səhifə-səhifə */
+  premiumPage(page: number): Promise<Paginated<ListingSummary>>;
   vip(categoryId?: string): Promise<ListingSummary[]>;
   byId(id: string): Promise<Listing>;
+  /** Sahib üçün tarifə görə süzülmüş statistika */
+  insights(id: string): Promise<ListingInsights>;
   mine(status: ListingStatus): Promise<ListingSummary[]>;
   create(input: CreateListingInput): Promise<Listing>;
   update(id: string, input: Partial<CreateListingInput>): Promise<Listing>;
@@ -106,6 +113,8 @@ export interface CreateStoreInput {
   city: string;
   address: string;
   workingHours: { open: string; close: string } | null;
+  /** Gün-gün qrafik — verilibsə workingHours əvəzinə göndərilir */
+  schedule?: WeeklyHours;
   phone: string;
   whatsapp: string;
   website: string | null;

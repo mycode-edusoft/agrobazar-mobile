@@ -2,16 +2,15 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { StepHeader } from '@/components/store/StepHeader';
-import { AppText, Button, Card, FooterBar, Input, Screen, ScreenHeader, SelectSheet, SingleImagePicker } from '@/components/ui';
+import { Field, FormCard, ImageField, RulesAccordion, Section, SelectField, StepTitle } from '@/components/store/FormKit';
+import { Button, FooterBar, Screen, ScreenHeader, SelectSheet } from '@/components/ui';
 import { t } from '@/i18n/az';
 import { qk, useCategories } from '@/lib/queries';
 import { STORE_DEFAULTS } from '@/lib/rules';
 import { api } from '@/services';
 import { useAuthStore } from '@/store/auth';
 import { useStoreDraft } from '@/store/storeDraft';
-import { colors, layout } from '@/theme';
-import { Icon } from '@/components/icons/Icon';
+import { layout } from '@/theme';
 
 export default function CreateStoreStep1() {
   const router = useRouter();
@@ -43,11 +42,12 @@ export default function CreateStoreStep1() {
     if (valid) router.push('/stores/create/step2');
   };
 
+  const reset = () => (editing && myStore.data ? startFrom(myStore.data, user?.phone.replace('+994', '') ?? '') : start());
+
   return (
     <Screen
-      header={<ScreenHeader title={editing ? t.cabinet.myStore : t.createStore.title} rightText={t.common.reset} onRightPress={start} />}
+      header={<ScreenHeader title={editing ? t.createStore.editTitle : t.createStore.title} rightText={t.common.reset} onRightPress={reset} />}
       scroll
-      padded
       keyboard
       footer={
         <FooterBar>
@@ -55,20 +55,40 @@ export default function CreateStoreStep1() {
         </FooterBar>
       }
     >
-      <StepHeader step={1} total={3} title={t.createStore.step1} />
-      <View style={styles.form}>
-        {editing ? (
-          <Card flat style={styles.note}>
-            <AppText variant="caption" color={colors.textMuted}>
-              {t.createStore.alreadyHave}
-            </AppText>
-          </Card>
-        ) : null}
-        <Input label={t.createStore.name} value={draft.name} onChangeText={(v) => set({ name: v })} placeholder={t.common.enter} error={touched && draft.name.trim().length < 2 ? t.auth.required : undefined} />
-        <Input label={t.createStore.description} value={draft.description} onChangeText={(v) => set({ description: v })} placeholder={t.createListing.descriptionPlaceholder} multiline error={touched && draft.description.trim().length < 10 ? t.auth.required : undefined} />
-        <Input label={t.createStore.category} value={category?.name ?? ''} placeholder={t.common.select} onPressContainer={() => setSheet(true)} rightElement={<Icon name="chevron" direction="down" size={20} color={colors.textMuted} />} />
-        <SingleImagePicker label={t.createStore.logo} uri={draft.logoUri} onChange={(logoUri) => set({ logoUri })} hint={t.createStore.uploadHint} maxBytes={STORE_DEFAULTS.maxImageBytes} />
-        <SingleImagePicker label={t.createStore.cover} uri={draft.coverUri} onChange={(coverUri) => set({ coverUri })} hint={t.createStore.uploadHint} maxBytes={STORE_DEFAULTS.maxImageBytes} aspect={[16, 7]} />
+      {/* Figma "Düzəliş et 1/3": qaydalar akkordeonu (kənarlardan 10), başlıq + 1/3, ağ kartda bölmələr */}
+      <View style={styles.body}>
+        <View style={styles.promo}>
+          <RulesAccordion />
+        </View>
+        <StepTitle step={1} />
+        <FormCard>
+          <Section title={t.createStore.name}>
+            <Field
+              value={draft.name}
+              onChangeText={(v) => set({ name: v })}
+              placeholder={t.common.enter}
+              error={touched && draft.name.trim().length < 2 ? t.auth.required : undefined}
+            />
+          </Section>
+          <Section title={t.createStore.description}>
+            <Field
+              value={draft.description}
+              onChangeText={(v) => set({ description: v })}
+              placeholder={t.createListing.descriptionPlaceholder}
+              multiline
+              error={touched && draft.description.trim().length < 10 ? t.auth.required : undefined}
+            />
+          </Section>
+          <Section title={t.createStore.category}>
+            <SelectField value={category?.name ?? ''} placeholder={t.common.select} onPress={() => setSheet(true)} />
+          </Section>
+          <Section title={t.createStore.logo}>
+            <ImageField uri={draft.logoUri} onChange={(logoUri) => set({ logoUri })} hint={t.createStore.logoHint} maxBytes={STORE_DEFAULTS.maxImageBytes} />
+          </Section>
+          <Section title={t.createStore.cover}>
+            <ImageField uri={draft.coverUri} onChange={(coverUri) => set({ coverUri })} hint={t.createStore.logoHint} maxBytes={STORE_DEFAULTS.maxImageBytes} wide />
+          </Section>
+        </FormCard>
       </View>
       <SelectSheet
         visible={sheet}
@@ -85,6 +105,6 @@ export default function CreateStoreStep1() {
 }
 
 const styles = StyleSheet.create({
-  form: { paddingTop: 16, gap: 12, paddingBottom: layout.screenPadding },
-  note: { backgroundColor: colors.primaryTint },
+  body: { padding: layout.screenPadding, gap: 16 },
+  promo: { marginHorizontal: -6 },
 });

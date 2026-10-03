@@ -47,9 +47,9 @@ export const colors = {
   switchTrackOff: 'rgba(120, 120, 128, 0.16)',
 
   tier: {
-    green: { from: '#F4EE36', to: '#52C234', text: '#B1DF39' },
-    purple: { from: '#A16DF3', to: '#4E17A4', text: '#824CD5' },
-    red: { from: '#E36B50', to: '#DD191D', text: '#E0493B' },
+    green: { from: '#F4EE36', to: '#52C234', text: '#B1DF39', solid: '#32B46A', soft: '#D9FFCE' },
+    purple: { from: '#A16DF3', to: '#4E17A4', text: '#824CD5', solid: '#824CD5', soft: '#E7D7FF' },
+    red: { from: '#E36B50', to: '#DD191D', text: '#E0493B', solid: '#E0493B', soft: '#FFE0D9' },
   },
 
   splashGradient: ['#52C234', '#175800'] as const,

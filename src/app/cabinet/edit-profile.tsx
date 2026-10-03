@@ -82,9 +82,9 @@ export default function EditProfileScreen() {
       scroll
       padded
       footer={
-        <FooterBar>
+        <FooterBar style={styles.footer}>
           <Button title={t.common.save} onPress={save} loading={saving} />
-          <AppText variant="caption" color={colors.textMuted} center>
+          <AppText variant="caption" color={colors.textMuted} center style={styles.version}>
             {t.cabinet.version(APP_VERSION)}
           </AppText>
           <Pressable onPress={() => setDeleteOpen(true)} style={styles.deleteLink}>
@@ -132,9 +132,10 @@ export default function EditProfileScreen() {
         onClose={() => setDeleteOpen(false)}
         onConfirm={remove}
         title={t.cabinet.deleteAccount}
-        message={t.cabinet.deleteAccountHint}
-        items={[t.cabinet.deleteAccountItem]}
-        confirmText={t.common.delete}
+        heading={t.cabinet.deleteAccountQuestion}
+        message={t.cabinet.deleteAccountWarning}
+        warning
+        confirmText={t.cabinet.deleteAccountConfirm}
         danger
         loading={deleting}
       />
@@ -143,22 +144,26 @@ export default function EditProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  avatarWrap: { alignItems: 'center', paddingVertical: 24 },
+  // Figma: başlıqdan 16 aşağı avatar, forma bloku padding 24 (kənarlardan 24), sahələr arası 16
+  avatarWrap: { alignItems: 'center', paddingTop: 16, paddingBottom: 4 },
   avatar: {
     width: 72, height: 72, borderRadius: 36, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.borderSubtle,
     alignItems: 'center', justifyContent: 'center',
   },
   avatarImg: { width: '100%', height: '100%', borderRadius: 36 },
   editBadge: {
-    position: 'absolute', right: -2, bottom: -2, width: 24, height: 24, borderRadius: 12, backgroundColor: colors.primary,
-    alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.surface,
+    position: 'absolute', right: -1, bottom: 3, width: 24, height: 24, borderRadius: 12, backgroundColor: colors.primary,
+    alignItems: 'center', justifyContent: 'center',
   },
-  form: { gap: 12, paddingBottom: layout.screenPadding },
+  form: { gap: 16, paddingTop: 24, paddingHorizontal: 8, paddingBottom: layout.screenPadding },
+  // Figma: düymə → versiya 16, versiya → "Hesabı sil" 10
+  footer: { paddingTop: 24, gap: 10 },
+  version: { marginTop: 6 },
   flex: { flex: 1 },
   phoneRow: { flexDirection: 'row', gap: 8 },
   codeBox: {
     height: layout.inputHeight, paddingHorizontal: 16, borderRadius: 8, backgroundColor: colors.inputBackgroundEmpty,
     flexDirection: 'row', alignItems: 'center', gap: 10,
   },
-  deleteLink: { alignSelf: 'center', paddingVertical: 4 },
+  deleteLink: { alignSelf: 'center', height: 32, justifyContent: 'center', paddingHorizontal: 12 },
 });

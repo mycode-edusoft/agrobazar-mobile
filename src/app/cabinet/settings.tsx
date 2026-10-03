@@ -1,16 +1,20 @@
-import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { AppText, Card, ConfirmSheet, ListRow, Screen, ScreenHeader, Switch } from '@/components/ui';
+import { useRouter, type Href } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
+import { AppText, ConfirmSheet, Screen, ScreenHeader, Switch } from '@/components/ui';
 import { t } from '@/i18n/az';
-import { qk } from '@/lib/queries';
-import { api } from '@/services';
 import { useAuthStore } from '@/store/auth';
 import { useFavoritesStore } from '@/store/favorites';
-import { colors, layout } from '@/theme';
+import { colors, layout, shadows, typography } from '@/theme';
 
+type IconName = keyof typeof Ionicons.glyphMap;
+
+/**
+ * Figma "Tənzimləmələr": Push bildirişlər kartı, menyu kartı (Yardım … Məxfilik siyasəti) və ayrıca
+ * "Çıxış" kartı. Çıxış "Hesabdan çıxış" təsdiq panelini açır.
+ */
 export default function SettingsScreen() {
   const router = useRouter();
   const qc = useQueryClient();
@@ -20,13 +24,6 @@ export default function SettingsScreen() {
   const [push, setPush] = useState(true);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-
-  const sub = useQuery({ queryKey: qk.subscription, queryFn: () => api.plans.current(), enabled: loggedIn });
-
-  const toggleAutoRenew = async (v: boolean) => {
-    await api.plans.setAutoRenew(v).catch(() => undefined);
-    await qc.invalidateQueries({ queryKey: qk.subscription });
-  };
 
   const logout = async () => {
     setLoggingOut(true);
@@ -39,48 +36,37 @@ export default function SettingsScreen() {
     router.replace('/');
   };
 
-  const icon = (name: keyof typeof Ionicons.glyphMap, color: string = colors.textMuted) => <Ionicons name={name} size={22} color={color} />;
+  const menu: { icon: IconName; label: string; href: Href }[] = [
+    { icon: 'headset-outline', label: t.settings.help, href: '/info/contact' },
+    { icon: 'call-outline', label: t.settings.contact, href: '/info/contact' },
+    { icon: 'phone-portrait-outline', label: t.settings.aboutApp, href: '/info/about' },
+    { icon: 'document-lock-outline', label: t.settings.userAgreement, href: { pathname: '/info/rules', params: { tab: 'agreement' } } },
+    { icon: 'warning-outline', label: t.settings.rules, href: { pathname: '/info/rules', params: { tab: 'listing' } } },
+    { icon: 'shield-checkmark-outline', label: t.settings.privacy, href: { pathname: '/info/rules', params: { tab: 'privacy' } } },
+  ];
 
   return (
-    <Screen header={<ScreenHeader title={t.cabinet.settings} />} scroll padded>
+    <Screen header={<ScreenHeader title={t.cabinet.settings} />} scroll>
       <View style={styles.body}>
-        <Card flat style={styles.toggleCard}>
-          <View style={styles.toggleRow}>
-            <View style={styles.flex}>
-              <AppText variant="body" color={colors.textSecondary}>
-                {t.settings.push}
-              </AppText>
-              <AppText variant="small" color={colors.textHelper}>
-                {t.settings.pushHint}
-              </AppText>
-            </View>
+        {/* Figma: kölgəsiz ağ kart; izah sətri ikon sütunundan sonra (54px) başlayır */}
+        <View style={styles.pushCard}>
+          <MenuRow icon="notifications-outline" label={t.settings.push} />
+          <View style={styles.pushRow}>
+            <AppText style={[styles.label, styles.hint]}>{t.settings.pushHint}</AppText>
             <Switch value={push} onChange={setPush} />
           </View>
-        </Card>
-        {loggedIn && sub.data ? (
-          <Card flat style={styles.toggleCard}>
-            <View style={styles.toggleRow}>
-              <AppText variant="body" color={colors.textSecondary} style={styles.flex}>
-                {t.settings.autoRenew}
-              </AppText>
-              <Switch value={sub.data.autoRenew} onChange={toggleAutoRenew} />
-            </View>
-          </Card>
-        ) : null}
+        </View>
 
-        <Card style={styles.menu}>
-          <ListRow icon={icon('headset-outline')} label={t.settings.help} onPress={() => router.push('/info/contact')} />
-          <ListRow icon={icon('call-outline')} label={t.settings.contact} onPress={() => router.push('/info/contact')} />
-          <ListRow icon={icon('information-circle-outline')} label={t.settings.aboutApp} onPress={() => router.push('/info/about')} />
-          <ListRow icon={icon('document-text-outline')} label={t.settings.userAgreement} onPress={() => router.push({ pathname: '/info/rules', params: { tab: 'agreement' } })} />
-          <ListRow icon={icon('shield-checkmark-outline')} label={t.settings.rules} onPress={() => router.push('/info/rules')} />
-          <ListRow icon={icon('lock-closed-outline')} label={t.settings.privacy} onPress={() => router.push({ pathname: '/info/rules', params: { tab: 'agreement' } })} last />
-        </Card>
+        <View style={[styles.card, styles.menu]}>
+          {menu.map((m, i) => (
+            <MenuRow key={m.label} icon={m.icon} label={m.label} onPress={() => router.push(m.href)} last={i === menu.length - 1} />
+          ))}
+        </View>
 
         {loggedIn ? (
-          <Card style={styles.menu}>
-            <ListRow icon={icon('log-out-outline', colors.dangerIcon)} label={t.cabinet.logout} onPress={() => setLogoutOpen(true)} right={<View />} last />
-          </Card>
+          <View style={[styles.card, styles.menu]}>
+            <MenuRow icon="log-in-outline" iconColor="#DC0812" label={t.cabinet.logout} onPress={() => setLogoutOpen(true)} last />
+          </View>
         ) : null}
       </View>
       <ConfirmSheet
@@ -97,10 +83,31 @@ export default function SettingsScreen() {
   );
 }
 
+// Figma: 22px ikon, 16px aralıq, etiket 16/24 #595959; ayırıcı yalnız mətn sütununun altında
+function MenuRow({
+  icon, iconColor = colors.textMuted, label, onPress, last, right,
+}: { icon: IconName; iconColor?: string; label: string; onPress?: () => void; last?: boolean; right?: ReactNode }) {
+  return (
+    <Pressable onPress={onPress} disabled={!onPress} style={styles.row}>
+      <Ionicons name={icon} size={22} color={iconColor} style={styles.icon} />
+      <View style={[styles.rowText, !last && styles.divider]}>
+        <AppText style={styles.label}>{label}</AppText>
+        {right}
+      </View>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  body: { paddingTop: 16, gap: layout.cardGap, paddingBottom: layout.screenPadding },
-  toggleCard: { paddingVertical: 12 },
-  toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  menu: { paddingVertical: 4 },
+  body: { padding: layout.screenPadding, gap: 16 },
+  pushCard: { backgroundColor: colors.surface, borderRadius: 14, paddingHorizontal: 16, paddingTop: 24, paddingBottom: 16, gap: 4 },
+  pushRow: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingLeft: 38 },
+  card: { backgroundColor: colors.surface, borderRadius: 14, ...shadows.card },
+  menu: { padding: 16, gap: 16 },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
+  icon: { width: 22 },
+  rowText: { flex: 1, flexDirection: 'row', alignItems: 'center' },
+  divider: { borderBottomWidth: 1, borderBottomColor: colors.divider, paddingBottom: 15 },
+  label: { flex: 1, ...typography.body, letterSpacing: -0.32, color: colors.textSecondary },
+  hint: { color: '#9DA4AE' },
 });
