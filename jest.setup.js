@@ -98,3 +98,9 @@ jest.mock('expo-notifications', () => ({
   addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
   AndroidImportance: { HIGH: 4 },
 }));
+
+jest.mock('@/services/http/analytics', () => ({
+  get httpAnalytics() {
+    return require('@/services/mock').mockApi.analytics;
+  },
+}));

@@ -8,7 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { BrandSplash } from '@/components/navigation/BrandSplash';
 import { configurePush, onPushOpened, onPushReceived, registerForPush } from '@/lib/push';
-import { api } from '@/services';
+import { api, rememberListingPath } from '@/services';
 import { ToastProvider } from '@/components/ui';
 import { useAuthStore } from '@/store/auth';
 import { useFavoritesStore } from '@/store/favorites';
@@ -86,6 +86,7 @@ function PushBridge() {
       if (data.notification_id != null) {
         api.notifications.markRead(String(data.notification_id)).catch(() => undefined).finally(refresh);
       }
+      rememberListingPath(data.listing_slug, data.listing_path);
       if (data.listing_slug) router.push({ pathname: '/listing/[id]', params: { id: data.listing_slug } });
       else router.push('/notifications');
     });

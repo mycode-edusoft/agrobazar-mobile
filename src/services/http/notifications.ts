@@ -1,6 +1,7 @@
 import type { NotificationApi } from '../api';
 import type { AppNotification, NotificationKind } from '@/types/domain';
 import { request, unwrapList } from './client';
+import { rememberListingPath, type ListingPath } from './listingPaths';
 
 interface ApiNotification {
   id: number;
@@ -11,11 +12,14 @@ interface ApiNotification {
   is_read: boolean;
   listing_id: number | null;
   listing_slug: string | null;
+  listing_path?: (ListingPath & { listing: string }) | null;
 }
 
 const KINDS: NotificationKind[] = ['vip', 'premium', 'listing', 'payment', 'system'];
 
 export function mapNotification(n: ApiNotification): AppNotification {
+  // Toxunanda detal birbaşa açılsın (aktiv olmayan elan axtarışda yoxdur)
+  rememberListingPath(n.listing_slug, n.listing_path);
   return {
     id: String(n.id),
     kind: KINDS.includes(n.kind) ? n.kind : 'system',

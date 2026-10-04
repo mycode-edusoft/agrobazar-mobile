@@ -5,6 +5,7 @@ import { mapDailyViews, mapInsights, type ApiDailySeries, type ApiMetrics } from
 import { cityIdByName } from './catalog';
 import { applyPromotion, promotionOffer } from './plan';
 import { request, unwrapList } from './client';
+import { detailUrl, listingPathOf, rememberFromListing, rememberListingPath, type ListingPath } from './listingPaths';
 import { mapListing, mapSummary, SERVICE_TYPE_TO_API, type ApiListing } from './mappers';
 
 const PAGE_SIZE = 20;
@@ -22,16 +23,50 @@ const STATUS_TO_API: Record<ListingStatus, string> = {
   rejected: 'rejected',
 };
 
-async function detailBySlug(slug: string): Promise<ApiListing> {
-  // Elan detalı üçün birbaşa endpoint yoxdur — slug üzrə axtarışdan tapılır
+interface ApiDetailRedirect {
+  redirect: true;
+  canonical_path: ListingPath & { listing: string };
+}
+
+/** Kateqoriya zənciri: yaddaşdan, yoxdursa axtarışdan (axtarış indeksində yalnız aktiv elanlar var). */
+async function resolvePath(slug: string, fresh = false): Promise<ListingPath> {
+  const known = fresh ? undefined : listingPathOf(slug);
+  if (known) return known;
   const res = await request<unknown>('listings/es_filter_search/', {
     auth: false,
     query: { q: slug, page_size: 20 },
   });
-  const items = unwrapList<ApiListing>(res).items;
-  const found = items.find((l) => l.slug === slug || String(l.id) === slug);
+  unwrapList<ApiListing>(res).items.forEach(rememberFromListing);
+  const found = listingPathOf(slug);
   if (!found) throw new ApiError('Elan tapılmadı', 'not_found', 404);
   return found;
+}
+
+/**
+ * Elan detalı — rəsmi detal endpoint-i: baxış sayğacı və statistika yalnız burada yazılır (sahib, bot və təkrar
+ * baxış serverdə süzülür). Aktiv olmayan elanları da qaytarır (sahibin geri qaytarılmış/bitmiş elanları).
+ */
+async function detailBySlug(slug: string): Promise<ApiListing> {
+  const load = async (path: ListingPath, s: string): Promise<ApiListing> => {
+    const res = await request<ApiListing | ApiDetailRedirect>(detailUrl(path, s));
+    if ('redirect' in res && res.redirect) {
+      // Köhnə slug (başlıq dəyişib) → kanonik ünvan
+      const c = res.canonical_path;
+      rememberListingPath(c.listing, c);
+      return request<ApiListing>(detailUrl(c, c.listing));
+    }
+    return res as ApiListing;
+  };
+  const path = await resolvePath(slug);
+  try {
+    return await load(path, slug);
+  } catch (e) {
+    // Yaddaşdakı zəncir köhnəlib (elanın kateqoriyası dəyişib) — bir dəfə axtarışdan təzələ
+    if (!(e instanceof ApiError) || e.status !== 404) throw e;
+    const fresh = await resolvePath(slug, true);
+    if (fresh.category === path.category && fresh.subcategory === path.subcategory && fresh.subsubcategory === path.subsubcategory) throw e;
+    return load(fresh, slug);
+  }
 }
 
 export const httpListings: ListingApi = {

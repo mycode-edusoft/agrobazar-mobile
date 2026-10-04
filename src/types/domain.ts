@@ -113,6 +113,8 @@ export interface ListingPromotions {
 
 export interface Listing {
   id: string;
+  /** Backend-in rəqəmsal id-si (statistika hadisələri üçün); mock məlumatda yoxdur. */
+  pk?: number;
   ownerId: string;
   storeId: string | null;
   categoryId: string;
@@ -129,6 +131,8 @@ export interface Listing {
   images: string[];
   videoUrl: string | null;
   fields: Record<string, string | number>;
+  /** Göstərməyə hazır xüsusiyyətlər (backend detalından); yoxdursa `fields` + sahə tərifləri istifadə olunur. */
+  specs?: { label: string; value: string }[];
   status: ListingStatus;
   rejectionReason: string | null;
   promotions: ListingPromotions;

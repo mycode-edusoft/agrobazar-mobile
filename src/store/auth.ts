@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { unregisterPush } from '@/lib/push';
+import { forgetPushToken, unregisterPush } from '@/lib/push';
 import { secureStorage } from '@/lib/secureStorage';
 import { api, onTokensChanged, setTokens } from '@/services';
 import type { AuthSession, User } from '@/types/domain';
@@ -14,7 +14,8 @@ interface AuthState {
   hydrate(): Promise<void>;
   setSession(session: AuthSession): Promise<void>;
   setUser(user: User): void;
-  signOut(): Promise<void>;
+  /** `local: true` — server sessiyanı artıq bağlayıb (hesab silindi): yalnız yerli təmizlik. */
+  signOut(opts?: { local?: boolean }): Promise<void>;
 }
 
 async function persistTokens(access: string | null, refresh: string | null) {
@@ -69,10 +70,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user });
   },
 
-  async signOut() {
-    // Push token-i sessiya bağlanmazdan əvvəl silinməlidir (sonra 401)
-    if (get().token) await unregisterPush();
-    if (get().token) await api.auth.logout().catch(() => undefined);
+  async signOut(opts) {
+    if (opts?.local) {
+      forgetPushToken();
+    } else if (get().token) {
+      // Push token-i sessiya bağlanmazdan əvvəl silinməlidir (sonra 401)
+      await unregisterPush();
+      await api.auth.logout().catch(() => undefined);
+    }
     setTokens(null);
     await persistTokens(null, null);
     set({ token: null, user: null });

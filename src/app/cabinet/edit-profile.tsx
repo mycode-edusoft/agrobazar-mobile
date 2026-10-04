@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { AppText, Button, ConfirmSheet, FooterBar, Input, Screen, ScreenHeader, SelectSheet, useToast } from '@/components/ui';
 import { t } from '@/i18n/az';
 import { AZ_COUNTRY_CODE } from '@/lib/format';
@@ -11,6 +12,7 @@ import { useCities } from '@/lib/queries';
 import { PROFILE_DEFAULTS } from '@/lib/rules';
 import { api, ApiError } from '@/services';
 import { useAuthStore } from '@/store/auth';
+import { useFavoritesStore } from '@/store/favorites';
 import { colors, layout } from '@/theme';
 import { Icon } from '@/components/icons/Icon';
 
@@ -24,6 +26,8 @@ export default function EditProfileScreen() {
   const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
   const signOut = useAuthStore((s) => s.signOut);
+  const qc = useQueryClient();
+  const reloadFavorites = useFavoritesStore((s) => s.load);
   const [city, setCity] = useState(user?.city ?? '');
   const [avatar, setAvatar] = useState<string | null>(user?.avatarUrl ?? null);
   const [regionOpen, setRegionOpen] = useState(false);
@@ -64,7 +68,9 @@ export default function EditProfileScreen() {
     setDeleting(true);
     try {
       await api.auth.deleteAccount();
-      await signOut();
+      await signOut({ local: true });
+      qc.clear();
+      await reloadFavorites().catch(() => undefined);
       setDeleteOpen(false);
       router.dismissAll();
       router.replace('/');

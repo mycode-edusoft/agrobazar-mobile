@@ -7,6 +7,7 @@ import type {
   ListingType,
   Store,
 } from '@/types/domain';
+import { rememberFromListing } from './listingPaths';
 
 export interface ApiRef {
   id: number;
@@ -36,10 +37,14 @@ export interface ApiListing {
   subsubcategory: ApiRef | null;
   images?: ApiImage[];
   cover_image?: string | null;
-  video?: string | null;
+  video?: string | { url?: string } | null;
   phone?: string | null;
   whatsapp?: string | null;
-  attributes?: { key?: string; slug?: string; name?: string; label?: string; value?: unknown }[];
+  // Axtarış sənədi: {key, value_*}; detal endpoint-i: {key, label, raw_value, display_value, unit}
+  attributes?: {
+    key?: string; slug?: string; name?: string; label?: string; value?: unknown;
+    raw_value?: unknown; display_value?: unknown; unit?: string | null;
+  }[];
   short_attributes?: { name?: string; label?: string; value?: unknown }[];
   is_vip?: boolean;
   vip_until?: string | null;
@@ -49,7 +54,11 @@ export interface ApiListing {
   is_favorited?: boolean;
   has_store?: boolean;
   owner_id?: number;
-  owner?: { id?: number; full_name?: string | null; store?: { id?: number; name?: string } | null } | null;
+  owner?: {
+    id?: number;
+    full_name?: string | null;
+    store?: { id?: number; name?: string; slug?: string; store_name?: string } | null;
+  } | null;
   views_count?: number;
   created_at: string;
   updated_at?: string;
@@ -98,6 +107,8 @@ const imageUrls = (l: ApiListing): string[] => {
 };
 
 export function mapSummary(l: ApiListing): ListingSummary {
+  // Detal endpoint-i üçün kateqoriya zənciri (bax: listingPaths.ts)
+  rememberFromListing(l);
   return {
     id: l.slug || String(l.id),
     title: l.title,
@@ -118,21 +129,38 @@ export function mapSummary(l: ApiListing): ListingSummary {
   };
 }
 
+const displayText = (v: unknown): string => {
+  if (Array.isArray(v)) return v.map(displayText).filter(Boolean).join(', ');
+  if (typeof v === 'boolean') return v ? 'Bəli' : 'Xeyr';
+  return v == null ? '' : String(v);
+};
+
 export function mapListing(l: ApiListing): Listing {
+  rememberFromListing(l);
   const attrs: Record<string, string | number> = {};
+  const specs: { label: string; value: string }[] = [];
   for (const a of l.attributes ?? l.short_attributes ?? []) {
     const key = (a as { key?: string; slug?: string; name?: string }).key
       ?? (a as { slug?: string }).slug
       ?? (a as { name?: string }).name;
     if (!key) continue;
-    const value = (a as { value?: unknown }).value;
-    if (value == null) continue;
-    attrs[key] = typeof value === 'number' ? value : String(value);
+    const raw = 'raw_value' in a ? a.raw_value : (a as { value?: unknown }).value;
+    if (raw != null && raw !== '') {
+      attrs[key] = typeof raw === 'number' ? raw : Array.isArray(raw) ? raw.join(',') : String(raw);
+    }
+    // Detal endpoint-i hazır göstərilən mətni verir (seçim adı, vahid) — sahə tərifləri olmadan da göstərilir
+    const shown = displayText((a as { display_value?: unknown }).display_value);
+    const label = (a as { label?: string }).label;
+    const unit = (a as { unit?: string | null }).unit;
+    if (label && shown) specs.push({ label, value: unit ? `${shown} ${unit}` : shown });
   }
+  const store = l.owner?.store;
   return {
     id: l.slug || String(l.id),
+    pk: l.id,
     ownerId: String(l.owner_id ?? l.owner?.id ?? ''),
-    storeId: l.owner?.store?.id != null ? String(l.owner.store.id) : null,
+    // Mağaza marşrutu slug ilə işləyir
+    storeId: store?.slug ?? (store?.id != null ? String(store.id) : null),
     categoryId: l.category?.slug ?? '',
     subcategoryId: l.subcategory?.slug ?? '',
     subsubId: l.subsubcategory?.slug ?? null,
@@ -145,8 +173,9 @@ export function mapListing(l: ApiListing): Listing {
     whatsapp: l.whatsapp ?? '',
     phone: l.phone ?? '',
     images: imageUrls(l),
-    videoUrl: l.video ?? null,
+    videoUrl: (typeof l.video === 'string' ? l.video : l.video?.url) ?? null,
     fields: attrs,
+    specs,
     status: toStatus(l.status),
     rejectionReason: l.rejection_reason ?? null,
     promotions: {
@@ -159,7 +188,7 @@ export function mapListing(l: ApiListing): Listing {
     updatedAt: l.updated_at ?? l.created_at,
     expiresAt: l.expires_at ?? null,
     internationalDelivery: false,
-    sellerName: l.owner?.store?.name ?? l.contact_name ?? l.owner?.full_name ?? '',
+    sellerName: store?.store_name ?? store?.name ?? l.contact_name ?? l.owner?.full_name ?? '',
   };
 }
 

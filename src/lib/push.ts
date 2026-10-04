@@ -19,6 +19,7 @@ let registeredToken: string | null = null;
 export interface PushData {
   notification_id?: number | string;
   listing_slug?: string | null;
+  listing_path?: { category: string; subcategory: string; subsubcategory: string } | null;
 }
 
 export function configurePush() {
@@ -54,6 +55,11 @@ export async function registerForPush(): Promise<void> {
   } catch (e) {
     if (__DEV__) console.warn('[push] qeydiyyat alınmadı', e);
   }
+}
+
+/** Server cihazı artıq silibsə (hesab silindi) — yalnız yerli vəziyyəti sıfırla. */
+export function forgetPushToken() {
+  registeredToken = null;
 }
 
 export async function unregisterPush(): Promise<void> {

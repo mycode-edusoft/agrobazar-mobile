@@ -157,8 +157,9 @@ export const httpAuth: AuthApi = {
     return mapUser(profile);
   },
 
+  // Backend anonimləşdirir: elanlar/mağaza silinir, sessiyalar ləğv olunur, nömrə azad olunur (bax: bugs.md C34)
   async deleteAccount() {
-    throw new ApiError('Hesabın silinməsi hazırda dəstəklənmir', 'not_supported', 501);
+    await request('auth/customers/profile/delete/', { method: 'POST', body: { confirm: true } });
   },
 
   async logout() {

@@ -8,6 +8,8 @@ import { ChartIcon, DeleteIcon, EditSquareIcon } from '@/components/icons/BadgeI
 import { useListingActions } from '@/components/listing/useListingActions';
 import { AppText, Button, Divider, FooterBar, IconButton, Screen } from '@/components/ui';
 import { t } from '@/i18n/az';
+import { trackListingEvent } from '@/lib/analytics';
+import { listingShareUrl } from '@/lib/links';
 import { formatDate, formatPrice } from '@/lib/format';
 import { qk, useCategory } from '@/lib/queries';
 import { api } from '@/services';
@@ -50,18 +52,26 @@ export default function ListingDetailScreen() {
     ...(subcategory ? [{ label: t.listing.category, value: subcategory.name }] : []),
     ...(subsub ? [{ label: t.listing.productCategory, value: subsub.name }] : []),
   ];
-  const features = fieldDefs
-    .filter((f) => listing.fields[f.key] != null && listing.fields[f.key] !== '')
-    .map((f) => `${f.label}: ${listing.fields[f.key]}${f.unit ? ` ${f.unit}` : ''}`);
+  const features = listing.specs?.length
+    ? listing.specs.map((f) => `${f.label}: ${f.value}`)
+    : fieldDefs
+      .filter((f) => listing.fields[f.key] != null && listing.fields[f.key] !== '')
+      .map((f) => `${f.label}: ${listing.fields[f.key]}${f.unit ? ` ${f.unit}` : ''}`);
   const meta: { label: string; value: string }[] = [
     { label: t.listing.number, value: listing.id.replace(/\D/g, '') || listing.id },
     { label: t.listing.views, value: String(listing.views) },
     { label: t.listing.updated, value: formatDate(listing.updatedAt) },
   ];
 
-  const share = () => Share.share({ message: `${listing.title} — aqrobazar://listing/${listing.id}` }).catch(() => undefined);
-  const call = () => Linking.openURL(`tel:${listing.phone}`).catch(() => undefined);
-  const whatsapp = () => Linking.openURL(`https://wa.me/${listing.whatsapp.replace(/\D/g, '')}`).catch(() => undefined);
+  const share = () => Share.share({ message: `${listing.title} — ${listingShareUrl(listing)}` }).catch(() => undefined);
+  const call = () => {
+    trackListingEvent(listing, 'phone_click');
+    Linking.openURL(`tel:${listing.phone}`).catch(() => undefined);
+  };
+  const whatsapp = () => {
+    trackListingEvent(listing, 'whatsapp_click');
+    Linking.openURL(`https://wa.me/${listing.whatsapp.replace(/\D/g, '')}`).catch(() => undefined);
+  };
 
   return (
     <Screen

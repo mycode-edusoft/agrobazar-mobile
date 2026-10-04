@@ -1,4 +1,5 @@
 import type { Api } from './api';
+import { httpAnalytics } from './http/analytics';
 import { httpAuth } from './http/auth';
 import { httpCatalog } from './http/catalog';
 import { API_BASE_URL } from './http/client';
@@ -26,9 +27,11 @@ export const api: Api = {
   balance: httpBalance,
   stores: httpStores,
   contact: httpContact,
+  analytics: httpAnalytics,
 };
 
 export { ApiError } from './api';
 export { setTokens, onTokensChanged, getAccessToken } from './http/client';
 export { cityNames, subsubcategoryAttributes } from './http/catalog';
+export { rememberListingPath } from './http/listingPaths';
 export type * from './api';

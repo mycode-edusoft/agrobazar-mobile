@@ -172,6 +172,19 @@ export interface NotificationApi {
   setPushEnabled(enabled: boolean): Promise<boolean>;
 }
 
+/** Elan statistikası hadisələri (backend: analytics/listings/events/batch/). Baxış serverdə detal açılanda yazılır. */
+export type ListingEventType = 'phone_click' | 'whatsapp_click';
+
+export interface ListingEvent {
+  listingPk: number;
+  type: ListingEventType;
+  occurredAt: string;
+}
+
+export interface AnalyticsApi {
+  sendListingEvents(events: ListingEvent[], sessionKey: string): Promise<void>;
+}
+
 export interface ContactApi {
   send(input: { name: string; email: string; phone: string; message: string }): Promise<void>;
 }
@@ -186,4 +199,5 @@ export interface Api {
   balance: BalanceApi;
   plans: PlanApi;
   contact: ContactApi;
+  analytics: AnalyticsApi;
 }

@@ -705,6 +705,10 @@ export const mockApi: Api = {
     },
   },
 
+  analytics: {
+    async sendListingEvents() {},
+  },
+
   contact: {
     async send() {
       await delay(500);
