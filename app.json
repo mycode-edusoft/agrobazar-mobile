@@ -2,7 +2,7 @@
   "expo": {
     "name": "Aqrobazar",
     "slug": "agrobazar-mobile",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "scheme": "aqrobazar",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -34,6 +34,14 @@
       "expo-image",
       "expo-secure-store",
       "expo-web-browser",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-monochrome.png",
+          "color": "#358D1A",
+          "defaultChannel": "default"
+        }
+      ],
       [
         "expo-image-picker",
         {

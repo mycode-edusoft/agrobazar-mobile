@@ -56,6 +56,7 @@ interface ApiTariff {
   premium_days_bank?: number;
   bump_credits_bank?: number;
   is_default?: boolean;
+  is_active?: boolean;
   is_popular?: boolean;
   order?: number;
 }
@@ -128,12 +129,13 @@ function mapSubscription(s: ApiSubscription): Subscription {
 
 export const httpPlans: PlanApi = {
   async plans(userType) {
+    // Endpoint IsCustomerUser tələb edir — token-siz sorğu 401 qaytarır (əvvəl ekran buna görə boş qalırdı)
     const res = await request<ApiTariff[] | { results: ApiTariff[] }>('plan/tariff-plans/', {
-      auth: false,
       query: { customer_type: userType === 'corporate' ? 'corporate' : 'individual' },
     });
     const items = unwrapList<ApiTariff>(res)
-      .items.filter((t) => !t.is_default)
+      // Backend siyahını is_active-ə görə süzmür — deaktiv tariflər burada çıxarılır
+      .items.filter((t) => !t.is_default && t.is_active !== false)
       .sort((a, b) => (a.order ?? a.id) - (b.order ?? b.id));
     return items.map((t, i) => mapPlan(t, i, userType));
   },

@@ -1,3 +1,4 @@
+import type { FavoriteStore } from '@/types/domain';
 import type { FavoriteApi } from '../api';
 import { request, unwrapList } from './client';
 import { mapSummary, type ApiListing } from './mappers';
@@ -13,6 +14,25 @@ const listingOf = (f: ApiFavorite | ApiListing): ApiListing =>
 async function loadFavorites(): Promise<ApiListing[]> {
   const res = await request<unknown>('listings/favorites/', { query: { page_size: 100 } });
   return unwrapList<ApiFavorite | ApiListing>(res).items.map(listingOf).filter(Boolean);
+}
+
+interface ApiFavoriteStore {
+  id: number;
+  slug: string;
+  store_name: string;
+  logo?: { url?: string } | string | null;
+  published_listings_count?: number;
+}
+
+// Giriş edilibsə profilə, edilməyibsə qonağa (visitor cookie) bağlıdır — elan seçilmişləri ilə eyni
+async function loadFavoriteStores(): Promise<FavoriteStore[]> {
+  const res = await request<unknown>('auth/customers/store-favorites/', { query: { page_size: 100 } });
+  return unwrapList<ApiFavoriteStore>(res).items.map((s) => ({
+    id: s.slug || String(s.id),
+    name: s.store_name,
+    logoUrl: typeof s.logo === 'string' ? s.logo : s.logo?.url ?? null,
+    activeListingsCount: s.published_listings_count ?? 0,
+  }));
 }
 
 /** Backend favoritləri listing pk ilə saxlayır, UI isə slug ilə işləyir. */
@@ -45,15 +65,14 @@ export const httpFavorites: FavoriteApi = {
     return items.map(mapSummary);
   },
 
-  // Mağaza favoritləri üçün backend endpoint-i yoxdur
   async stores() {
-    return [];
+    return loadFavoriteStores();
   },
 
   async ids() {
-    const items = await loadFavorites();
+    const [items, stores] = await Promise.all([loadFavorites(), loadFavoriteStores().catch(() => [])]);
     remember(items);
-    return { listings: items.map((l) => l.slug || String(l.id)), stores: [] };
+    return { listings: items.map((l) => l.slug || String(l.id)), stores: stores.map((s) => s.id) };
   },
 
   async addListing(id) {
@@ -64,12 +83,13 @@ export const httpFavorites: FavoriteApi = {
     await request(`listings/favorites/${await pkOf(id)}/delete/`, { method: 'DELETE' });
   },
 
-  async addStore() {
-    // dəstəklənmir
+  // UI mağazanı slug ilə tanıyır; backend həm slug, həm id qəbul edir
+  async addStore(id) {
+    await request('auth/customers/store-favorites/create/', { method: 'POST', body: { store_slug: id } });
   },
 
-  async removeStore() {
-    // dəstəklənmir
+  async removeStore(id) {
+    await request(`auth/customers/store-favorites/${encodeURIComponent(id)}/delete/`, { method: 'DELETE' });
   },
 
   async removeListings(ids) {

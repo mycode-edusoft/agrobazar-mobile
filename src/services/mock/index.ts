@@ -91,6 +91,7 @@ const state = {
   subscription: seedSubscription as Subscription | null,
   transactions: [...seedTransactions],
   notifications: seedNotifications.map((n) => ({ ...n })),
+  pushEnabled: true,
   payments: new Map<string, { status: PaymentStatus; resolveAt: number; apply: () => void }>(),
 };
 
@@ -692,6 +693,15 @@ export const mockApi: Api = {
       await delay(120);
       requireAuth();
       state.notifications = state.notifications.filter((n) => n.id !== id);
+    },
+    async registerDevice() {},
+    async unregisterDevice() {},
+    async pushEnabled() {
+      return state.pushEnabled;
+    },
+    async setPushEnabled(enabled) {
+      state.pushEnabled = enabled;
+      return enabled;
     },
   },
 

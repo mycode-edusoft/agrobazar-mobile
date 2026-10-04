@@ -49,8 +49,13 @@ export const useFavoritesStore = create<FavoritesState>((set, get) => ({
     if (has) next.delete(id);
     else next.add(id);
     set({ storeIds: next });
-    if (has) await api.favorites.removeStore(id, anon());
-    else await api.favorites.addStore(id, anon());
+    try {
+      if (has) await api.favorites.removeStore(id, anon());
+      else await api.favorites.addStore(id, anon());
+    } catch (e) {
+      await get().load().catch(() => undefined);
+      throw e;
+    }
     return !has;
   },
 

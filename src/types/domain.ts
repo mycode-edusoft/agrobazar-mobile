@@ -339,6 +339,6 @@ export interface ListingInsights {
   premiumImpact?: PromotionImpact | null;
   vipImpact?: PromotionImpact | null;
   bumpImpact?: PromotionImpact | null;
-  /** Qrafik üçün dövr üzrə baxış seriyası — backend hələ vermir (null) */
+  /** Qrafik üçün dövr üzrə baxış seriyası (`metrics/daily/`); tarif və ya backend vermirsə null */
   series: Partial<Record<InsightPeriod, { label: string; value: number }[]>> | null;
 }

@@ -4,6 +4,7 @@ import { httpCatalog } from './http/catalog';
 import { API_BASE_URL } from './http/client';
 import { httpFavorites } from './http/favorites';
 import { httpListings } from './http/listings';
+import { httpNotifications } from './http/notifications';
 import { httpBalance, httpPlans } from './http/plan';
 import { httpContact, httpStores } from './http/stores';
 import { mockApi } from './mock';
@@ -11,14 +12,13 @@ import { mockApi } from './mock';
 export const API_URL = API_BASE_URL;
 
 /**
- * Mərhələli miqrasiya — bağlanmış domenlər real API-dən gəlir:
- *   auth · catalog · listings (təşviqlər daxil) · favorites · plans · balance · stores · contact
- * Yalnız notifications mock-dadır — backend endpoint yoxdur
- * (müqavilə: docs/api-contract-notifications.md).
+ * Bütün domenlər real API-dən gəlir (müqavilə: docs/api-contract-notifications.md — bildirişlər/push,
+ * seçilmiş mağazalar). mockApi yalnız testlər və offline önizləmə üçün qalır.
  */
 export const api: Api = {
   ...mockApi,
   auth: httpAuth,
+  notifications: httpNotifications,
   catalog: httpCatalog,
   favorites: httpFavorites,
   listings: httpListings,

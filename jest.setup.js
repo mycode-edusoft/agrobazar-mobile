@@ -78,3 +78,23 @@ jest.mock('@/services/http/stores', () => {
     },
   };
 });
+
+jest.mock('@/services/http/notifications', () => ({
+  get httpNotifications() {
+    return require('@/services/mock').mockApi.notifications;
+  },
+}));
+
+// Native push modulu testlərdə yoxdur — push qeydiyyatı icazə verilməmiş kimi səssizcə keçir
+jest.mock('expo-notifications', () => ({
+  setNotificationHandler: jest.fn(),
+  setNotificationChannelAsync: jest.fn(async () => null),
+  getPermissionsAsync: jest.fn(async () => ({ status: 'denied' })),
+  requestPermissionsAsync: jest.fn(async () => ({ status: 'denied' })),
+  getExpoPushTokenAsync: jest.fn(async () => ({ data: 'ExponentPushToken[test]' })),
+  getLastNotificationResponseAsync: jest.fn(async () => null),
+  clearLastNotificationResponseAsync: jest.fn(async () => undefined),
+  addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  AndroidImportance: { HIGH: 4 },
+}));

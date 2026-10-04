@@ -1,4 +1,4 @@
-import { mapInsights } from '@/services/http/insights';
+import { mapDailyViews, mapInsights } from '@/services/http/insights';
 import { ordinal } from '@/lib/format';
 
 describe('mapInsights', () => {
@@ -36,5 +36,31 @@ describe('mapInsights', () => {
 describe('ordinal', () => {
   it('azərbaycan sıra şəkilçisi', () => {
     expect([1, 3, 6, 9, 10, 40, 100].map(ordinal)).toEqual(['1-ci', '3-cü', '6-cı', '9-cu', '10-cu', '40-cı', '100-cü']);
+  });
+});
+
+describe('mapDailyViews', () => {
+  it('baxış seriyasını dd.MM etiketləri ilə qaytarır (saat qurşağı günü sürüşdürmür)', () => {
+    const points = mapDailyViews({
+      visibility: { series: { views: { enabled: true, max_days: 30 } } },
+      points: [
+        { date: '2026-09-30', views: 4, contacts: 0, favorites: null },
+        { date: '2026-10-01', views: 0, contacts: 1, favorites: null },
+      ],
+    });
+    expect(points).toEqual([
+      { label: '30.09', value: 4 },
+      { label: '01.10', value: 0 },
+    ]);
+  });
+
+  it('tarif seriyaya icazə vermirsə null qaytarır', () => {
+    expect(
+      mapDailyViews({
+        visibility: { series: { views: { enabled: false, max_days: 7 } } },
+        points: [{ date: '2026-10-01', views: null, contacts: null, favorites: null }],
+      }),
+    ).toBeNull();
+    expect(mapDailyViews({ points: [] })).toBeNull();
   });
 });

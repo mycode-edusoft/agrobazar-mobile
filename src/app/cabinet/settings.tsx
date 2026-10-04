@@ -2,9 +2,11 @@ import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, type Href } from 'expo-router';
-import { useQueryClient } from '@tanstack/react-query';
-import { AppText, ConfirmSheet, Screen, ScreenHeader, Switch } from '@/components/ui';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AppText, ConfirmSheet, Screen, ScreenHeader, Switch, useToast } from '@/components/ui';
 import { t } from '@/i18n/az';
+import { qk } from '@/lib/queries';
+import { api } from '@/services';
 import { useAuthStore } from '@/store/auth';
 import { useFavoritesStore } from '@/store/favorites';
 import { colors, layout, shadows, typography } from '@/theme';
@@ -21,7 +23,19 @@ export default function SettingsScreen() {
   const loggedIn = useAuthStore((s) => s.token != null);
   const signOut = useAuthStore((s) => s.signOut);
   const reloadFavorites = useFavoritesStore((s) => s.load);
-  const [push, setPush] = useState(true);
+  const toast = useToast();
+  // Hesab səviyyəsində (mobil + web ortaq): söndürüləndə bildirişlər tətbiqdə yaranır, push getmir
+  const pushSetting = useQuery({ queryKey: qk.pushEnabled, queryFn: () => api.notifications.pushEnabled(), enabled: loggedIn });
+  const setPushEnabled = useMutation({
+    mutationFn: (enabled: boolean) => api.notifications.setPushEnabled(enabled),
+    onMutate: (enabled) => qc.setQueryData(qk.pushEnabled, enabled),
+    onSuccess: (enabled) => qc.setQueryData(qk.pushEnabled, enabled),
+    onError: () => {
+      qc.invalidateQueries({ queryKey: qk.pushEnabled });
+      toast(t.common.error, 'error');
+    },
+  });
+  const push = pushSetting.data ?? true;
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -53,7 +67,7 @@ export default function SettingsScreen() {
           <MenuRow icon="notifications-outline" label={t.settings.push} />
           <View style={styles.pushRow}>
             <AppText style={[styles.label, styles.hint]}>{t.settings.pushHint}</AppText>
-            <Switch value={push} onChange={setPush} />
+            <Switch value={loggedIn && push} onChange={(v) => setPushEnabled.mutate(v)} disabled={!loggedIn || pushSetting.isLoading} />
           </View>
         </View>
 

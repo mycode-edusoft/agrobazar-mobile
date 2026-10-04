@@ -164,6 +164,12 @@ export interface NotificationApi {
   markRead(id: string): Promise<void>;
   markAllRead(): Promise<void>;
   remove(id: string): Promise<void>;
+  /** Expo push token-in qeydiyyatı — girişdən sonra və hər açılışda (idempotent). */
+  registerDevice(token: string, platform: 'android' | 'ios'): Promise<void>;
+  /** Çıxışda, sessiya bağlanmazdan əvvəl. */
+  unregisterDevice(token: string): Promise<void>;
+  pushEnabled(): Promise<boolean>;
+  setPushEnabled(enabled: boolean): Promise<boolean>;
 }
 
 export interface ContactApi {

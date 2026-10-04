@@ -69,7 +69,27 @@ export function mapInsights(res: ApiMetrics): ListingInsights {
     premiumImpact: pick('premium_promotion_impact', mapImpact),
     vipImpact: pick('vip_promotion_impact', mapImpact),
     bumpImpact: pick('bump_promotion_impact', mapImpact),
-    // Backend gün-gün seriya qaytarmır — qrafik boş vəziyyətdə göstərilir
+    // Gün-gün seriya ayrıca endpoint-dən gəlir (`metrics/daily/`) — listings.insights() birləşdirir
     series: null,
   };
+}
+
+/** GET plan/listings/<id>/metrics/daily/?days=N */
+export interface ApiDailySeries {
+  visibility?: { series?: Record<string, { enabled: boolean; max_days: number }> };
+  points?: { date: string; views: number | null; contacts: number | null; favorites: number | null }[];
+}
+
+/**
+ * Baxış seriyasını qrafik nöqtələrinə çevirir ("dd.MM" etiketi). Tarif seriyaya icazə vermirsə null.
+ * Tarix "YYYY-MM-DD" kimi gəlir — Date-ə çevrilmir ki, saat qurşağı günü sürüşdürməsin.
+ */
+export function mapDailyViews(res: ApiDailySeries): { label: string; value: number }[] | null {
+  if (res.visibility?.series?.views?.enabled === false) return null;
+  const points = res.points ?? [];
+  if (!points.length || points.some((p) => typeof p.views !== 'number')) return null;
+  return points.map((p) => {
+    const [, month, day] = p.date.split('-');
+    return { label: `${day}.${month}`, value: p.views as number };
+  });
 }

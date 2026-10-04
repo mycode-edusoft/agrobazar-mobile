@@ -1,7 +1,7 @@
 import type { Listing, ListingStatus, ListingSummary, Paginated } from '@/types/domain';
 import { ApiError, type CreateListingInput, type ListingApi } from '../api';
 import { httpAuth } from './auth';
-import { mapInsights, type ApiMetrics } from './insights';
+import { mapDailyViews, mapInsights, type ApiDailySeries, type ApiMetrics } from './insights';
 import { cityIdByName } from './catalog';
 import { applyPromotion, promotionOffer } from './plan';
 import { request, unwrapList } from './client';
@@ -36,6 +36,8 @@ async function detailBySlug(slug: string): Promise<ApiListing> {
 
 export const httpListings: ListingApi = {
   async search(filter, page): Promise<Paginated<ListingSummary>> {
+    // Backend `city` = City id (slug da qəbul olunur); filter ekranı şəhərin adını saxlayır
+    const cityId = filter.city ? await cityIdByName(filter.city) : null;
     const res = await request<unknown>('listings/es_filter_search/', {
       auth: false,
       query: {
@@ -47,6 +49,7 @@ export const httpListings: ListingApi = {
         subsubcategory: filter.subsubIds?.[0],
         price_min: filter.priceMin,
         price_max: filter.priceMax,
+        city: cityId ?? undefined,
         service_type: filter.types?.length === 1 ? SERVICE_TYPE_TO_API[filter.types[0]] : undefined,
         sort: SORT_TO_API[filter.sort ?? 'date'],
         is_vip: false,
@@ -98,8 +101,19 @@ export const httpListings: ListingApi = {
 
   async insights(id) {
     const listing = await detailBySlug(id);
-    const res = await request<ApiMetrics>(`plan/listings/${listing.id}/metrics/`);
-    return mapInsights(res);
+    const insights = mapInsights(await request<ApiMetrics>(`plan/listings/${listing.id}/metrics/`));
+    // Qrafik: seriya yalnız tarifin açdığı dövr üçün istənilir. Endpoint hələ deploy olunmayıbsa (404)
+    // və ya xəta olarsa qrafik boş vəziyyətdə qalır — əsas metriklər ondan asılı deyil.
+    const daily = (days: 7 | 30) =>
+      request<ApiDailySeries>(`plan/listings/${listing.id}/metrics/daily/`, { query: { days } })
+        .then(mapDailyViews)
+        .catch(() => null);
+    const [week, month] = await Promise.all([
+      insights.viewsLast7d !== undefined ? daily(7) : Promise.resolve(null),
+      insights.viewsLast30d !== undefined ? daily(30) : Promise.resolve(null),
+    ]);
+    const series = { ...(week ? { '7d': week } : {}), ...(month ? { '30d': month } : {}) };
+    return { ...insights, series: Object.keys(series).length ? series : null };
   },
 
   async mine(status) {

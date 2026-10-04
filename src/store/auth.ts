@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { unregisterPush } from '@/lib/push';
 import { secureStorage } from '@/lib/secureStorage';
 import { api, onTokensChanged, setTokens } from '@/services';
 import type { AuthSession, User } from '@/types/domain';
@@ -69,6 +70,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   async signOut() {
+    // Push token-i sessiya bağlanmazdan əvvəl silinməlidir (sonra 401)
+    if (get().token) await unregisterPush();
     if (get().token) await api.auth.logout().catch(() => undefined);
     setTokens(null);
     await persistTokens(null, null);

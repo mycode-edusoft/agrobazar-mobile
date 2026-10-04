@@ -24,6 +24,7 @@ export const qk = {
   favStores: ['favorites', 'stores'] as const,
   notifications: (sort: NotificationSort) => ['notifications', sort] as const,
   unreadCount: ['notifications', 'unread'] as const,
+  pushEnabled: ['settings', 'push'] as const,
   transactions: ['transactions'] as const,
   plans: (type: UserType) => ['plans', type] as const,
   subscription: ['subscription'] as const,
