@@ -188,7 +188,13 @@ export default function StoreScreen() {
         />
       }
     >
-      <ListingGrid data={listings.data ?? []} header={header} contentContainerStyle={styles.grid} />
+      <ListingGrid
+        data={listings.data ?? []}
+        header={header}
+        contentContainerStyle={styles.grid}
+        // Öz mağazası olsa da göndərilir — sahibin hadisələrini server süzür
+        analytics={{ source: 'other', blockOf: () => 'store_detail' }}
+      />
 
       {/* Figma "İş qrafiki": Bold 16 başlıq + "×", hər gün "Bazar ertəsi: 09:00 - 19:00" (Medium 14/22, aralıq 16) */}
       {week ? (

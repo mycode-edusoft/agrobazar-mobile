@@ -146,6 +146,8 @@ export interface Listing {
 
 export interface ListingSummary {
   id: string;
+  /** Backend-in rəqəmsal id-si (statistika hadisələri üçün); mock məlumatda yoxdur. */
+  pk?: number;
   title: string;
   price: number | null;
   negotiable: boolean;

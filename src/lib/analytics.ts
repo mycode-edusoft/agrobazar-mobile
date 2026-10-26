@@ -1,30 +1,55 @@
 import { AppState } from 'react-native';
-import { api, ApiError, type ListingEvent, type ListingEventType } from '@/services';
+import { api, ApiError, type AnalyticsSource, type ListingEvent, type ListingEventType } from '@/services';
 
 /**
- * Elan statistikası: əlaqə klikləri (zəng / WhatsApp) — sahibin statistikasında «Əlaqə» göstəricisi.
+ * Elan statistikası hadisələri (sahibin statistika ekranı: Əlaqə, CTR).
  *
- * - Klik tətbiqdən çıxarır (zəng/WhatsApp açılır), ona görə hadisə növbədə gözləmir, dərhal göndərilir.
- * - Şəbəkə xətasında yaddaşda saxlanılır və növbəti klikdə / tətbiq ön plana qayıdanda yenidən göndərilir.
- * - 4xx (elan artıq aktiv deyil və s.) — təkrar mənasızdır, atılır. Sahibin öz klikləri serverdə süzülür.
- * - Baxış (detail_view) və seçilmişə əlavə (favorite_add) serverdə özü yazılır — buradan göndərilmir.
+ * - Əlaqə klikləri (zəng / WhatsApp) tətbiqdən çıxarır → dərhal göndərilir.
+ * - Kart göstərilmələri və karta toxunuşlar paketlə: BATCH_SIZE yığılanda, FLUSH_DELAY_MS sonra və ya tətbiq
+ *   arxa plana keçəndə.
+ * - Şəbəkə / 429 / 5xx → növbədə qalır, sonra yenidən. 4xx → paket yarıya bölünüb yenidən göndərilir: backend
+ *   paketdə bir dənə də aktiv olmayan elan görsə BÜTÜN paketi rədd edir; bölmə pis hadisəni təcrid edib atır.
+ * - Server sahibin öz hadisələrini, botları və təkrarları (dəqiqəlik) süzür.
  */
 
-const MAX_PENDING = 50;
-// Bir tətbiq açılışı = bir sessiya (server təkrarları bununla da ayırd edir)
+const MAX_PENDING = 300;
+const BATCH_SIZE = 20;
+const FLUSH_DELAY_MS = 10_000;
+const MAX_REQUEST = 100; // backend limiti
+
+// Bir tətbiq açılışı = bir sessiya
 const sessionKey = `m-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 let pending: ListingEvent[] = [];
 let flushing = false;
+let timer: ReturnType<typeof setTimeout> | null = null;
 
-async function flush() {
-  if (flushing || pending.length === 0) return;
-  flushing = true;
-  const batch = pending.slice(0, 100);
+const isClientError = (e: unknown) => e instanceof ApiError && e.status >= 400 && e.status < 500 && e.status !== 429;
+
+/** true — paket (və ya onun düzgün hissələri) qəbul olundu ya da atıldı; false — sonra yenidən cəhd. */
+async function send(batch: ListingEvent[]): Promise<boolean> {
   try {
     await api.analytics.sendListingEvents(batch, sessionKey);
-    pending = pending.slice(batch.length);
+    return true;
   } catch (e) {
-    if (e instanceof ApiError && e.status >= 400 && e.status < 500 && e.status !== 429) {
+    if (!isClientError(e)) return false;
+    if (batch.length === 1) return true; // tək pis hadisə — atılır
+    const mid = Math.ceil(batch.length / 2);
+    const [a, b] = await Promise.all([send(batch.slice(0, mid)), send(batch.slice(mid))]);
+    return a && b;
+  }
+}
+
+export async function flushAnalytics() {
+  if (timer) {
+    clearTimeout(timer);
+    timer = null;
+  }
+  if (flushing || pending.length === 0) return;
+  flushing = true;
+  try {
+    while (pending.length > 0) {
+      const batch = pending.slice(0, MAX_REQUEST);
+      if (!(await send(batch))) break;
       pending = pending.slice(batch.length);
     }
   } finally {
@@ -32,14 +57,45 @@ async function flush() {
   }
 }
 
+function schedule() {
+  if (pending.length >= BATCH_SIZE) void flushAnalytics();
+  else if (!timer) timer = setTimeout(() => void flushAnalytics(), FLUSH_DELAY_MS);
+}
+
 AppState.addEventListener('change', (state) => {
-  if (state === 'active') void flush();
+  if (state !== 'active') void flushAnalytics(); // arxa plana keçir — yığılanı göndər
+  else if (pending.length) void flushAnalytics();
 });
 
-export function trackListingEvent(listing: { pk?: number; status: string }, type: ListingEventType) {
-  // Server yalnız aktiv elanlar üçün hadisə qəbul edir (qarışıq batch bütövlükdə rədd olunar)
-  if (!listing.pk || listing.status !== 'active') return;
-  pending.push({ listingPk: listing.pk, type, occurredAt: new Date().toISOString() });
+interface Trackable {
+  pk?: number;
+  status: string;
+}
+
+function enqueue(listing: Trackable, type: ListingEventType, extra: Pick<ListingEvent, 'source' | 'card'> = {}) {
+  // Server yalnız aktiv elanlar üçün hadisə qəbul edir
+  if (!listing.pk || listing.status !== 'active') return false;
+  pending.push({ listingPk: listing.pk, type, occurredAt: new Date().toISOString(), ...extra });
   if (pending.length > MAX_PENDING) pending = pending.slice(-MAX_PENDING);
-  void flush();
+  return true;
+}
+
+export function trackListingEvent(listing: Trackable, type: 'phone_click' | 'whatsapp_click') {
+  if (enqueue(listing, type)) void flushAnalytics();
+}
+
+export interface CardContext {
+  source: AnalyticsSource;
+  block: string;
+  index: number;
+}
+
+export function trackCardImpression(listing: Trackable, ctx: CardContext) {
+  if (enqueue(listing, 'card_impression', { source: ctx.source, card: { index: ctx.index, block: ctx.block } })) schedule();
+}
+
+export function trackCardOpen(listing: Trackable, ctx: CardContext) {
+  if (enqueue(listing, 'detail_open_from_list', { source: ctx.source, card: { index: ctx.index, block: ctx.block } })) {
+    schedule();
+  }
 }

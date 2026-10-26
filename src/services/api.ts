@@ -172,13 +172,23 @@ export interface NotificationApi {
   setPushEnabled(enabled: boolean): Promise<boolean>;
 }
 
-/** Elan statistikası hadisələri (backend: analytics/listings/events/batch/). Baxış serverdə detal açılanda yazılır. */
-export type ListingEventType = 'phone_click' | 'whatsapp_click';
+/**
+ * Elan statistikası hadisələri (backend: analytics/listings/events/batch/). Baxış (detail_view) və seçilmişə
+ * əlavə (favorite_add) serverdə özü yazılır — klient göndərmir.
+ * CTR = detail_open_from_list / card_impression.
+ */
+export type ListingEventType = 'phone_click' | 'whatsapp_click' | 'card_impression' | 'detail_open_from_list';
+
+/** Backend `source_page` kodları (analytics/constants.py) */
+export type AnalyticsSource = 'search' | 'category' | 'subcategory' | 'favorites' | 'similar' | 'vip_block' | 'premium_block' | 'other';
 
 export interface ListingEvent {
   listingPk: number;
   type: ListingEventType;
   occurredAt: string;
+  source?: AnalyticsSource;
+  /** Siyahıdakı kart: mövqe (0-dan) və blok (standart / premium / vip / favorites / store_detail) */
+  card?: { index: number; block: string };
 }
 
 export interface AnalyticsApi {

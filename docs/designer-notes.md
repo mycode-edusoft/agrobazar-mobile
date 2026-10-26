@@ -31,7 +31,7 @@ Hər bənd üçün Figma bölməsi və mümkün olduqda node ID verilib.
 |---|---|---|
 | Bildirişlər — boş vəziyyət | "No Notifications" / "We'll let you know when there will be something to update you." | Azərbaycanca mətn. Tətbiqdə hazırda: *"Bildiriş yoxdur" / "Yeni bir şey olanda sizə xəbər verəcəyik."* |
 | Bildirişlər — sıralama | "Newest First", "Older First", "Read Notification", "Unread Notification" | Azərbaycanca. Tətbiqdə: *Əvvəlcə yeni / Əvvəlcə köhnə / Oxunmuş / Oxunmamış* |
-| Bildirişlər — siyahı | "Today's the day. Your culinary adventure is almost there." | Bildiriş növlərinə görə real mətn şablonları (elan təsdiqləndi / rədd edildi / müddəti bitdi / VIP tətbiq olundu / balans artımı…) |
+| Bildirişlər — siyahı | "Today's the day. Your culinary adventure is almost there." | Real mətnlər backend-dədir (bax bölmə 22) — dizaynda nümunə kimi onlardan istifadə olunsun |
 | Ana səhifə — banner | "Get Up to 20% Off", "Fresh vegtables!" (*vegetables* səhv yazılıb) | Bannerlər backend-dən şəkil kimi gəlir — Figma-dakı mətn yalnız nümunədirsə, qeyd edin |
 | Kataloq — çip sırası | "Waiting for payment (6)", "Sorting (6)" (`2137:16977`, `2137:16979`) | Görünməyən qalıq çiplərdir — silinsin |
 
@@ -73,9 +73,9 @@ Hər bənd üçün Figma bölməsi və mümkün olduqda node ID verilib.
 - **OTP xanalarının sayı:** dizaynda **4** xana, BRD-də və backend-də kod **6 rəqəmlidir**. Tətbiqdə 6 xana göstərilir — dizayn 6-ya yenilənsin.
 - **"istifadəçi razılaşması" linki** hələlik "Qaydalar" səhifəsinə aparır — ayrıca İstifadəçi razılaşması səhifəsi/mətni nəzərdə tutulursa, lazımdır.
 
-## 🟠 8. Backend ilə ziddiyyət
+## ✅ 8. Backend ilə ziddiyyət — həll olunub
 
-- **Bizimlə əlaqə forması:** backend `email` sahəsini **məcburi** tələb edir, formada isə email sahəsi yoxdur. Ya formaya email əlavə olunsun, ya da backend-də məcburilik götürülsün (bu, backend komandası ilə birlikdə həll edilməlidir).
+- **Bizimlə əlaqə forması:** formaya Email sahəsi əlavə olundu (bax bölmə 21), backend-ə real email göndərilir.
 
 ## 🟠 9. Şəxsi kabinet
 
@@ -87,7 +87,7 @@ Hər bənd üçün Figma bölməsi və mümkün olduqda node ID verilib.
   - dizaynda telefon sahəsində xəta vəziyyəti var (qırmızı haşiyə), yəni nömrə redaktə olunan kimi göstərilib. BRD-yə görə telefon bu ekranda dəyişdirilmir, tətbiqdə sahə bağlıdır;
   - dördüncü sahə dizaynda gizlədilib (`display: none`), tətbiqdə orada "Şəhər" seçimi var;
   - versiya dizaynda "4.401", tətbiqdə real versiya göstərilir.
-- **Hesabı sil:** dizayn mətnində qalıq balansın qaytarılmaması (BRD qaydası) qeyd olunmur. Bu məlumat istifadəçiyə göstərilməlidirmi?
+- **Hesabı sil:** ~~qalıq balansın qaytarılmaması qeyd olunmur~~ — *qərar (4 okt):* dizayn mətni olduğu kimi qalır. Hesab silmə backend-də işləyir (tətbiqdə və saytda `aqrobazar.com/hesabi-sil`).
 - **Elanlarım (Müddəti bitmiş):**
   - seçilməmiş "Aktiv" çipi digərlərindən fərqlidir (haşiyə `#D2D6DB`, mətn `#7A7A7A`; digərləri `#D9DCE0` / `#595959`);
   - kartlarda idarə (⋯) düyməsi yoxdur, elanı yeniləmək/silmək necə edilir?
@@ -249,7 +249,7 @@ Hər bənd üçün Figma bölməsi və mümkün olduqda node ID verilib.
 - **İş qrafiki sərbəst mətndir:** `business_hours` 255 simvolluq CharField-dir. Tətbiq gün-gün qrafiki "Bazar ertəsi 09:00 - 18:00; …; Bazar bağlı" mətni kimi yazır və geri parse edir. Bu işləyir, amma kövrəkdir: web paneldə əl ilə yazılmış fərqli format oxunmaya bilər. Təklif: `business_hours` JSONField, məsələn `[{day:0, open:"09:00", close:"18:00", closed:false}, …]`, və ya ayrıca `StoreWorkingDay` cədvəli.
 - **Cover şəkil:** modeldə `cover_image` var, Figma formasında yoxdur. Tətbiq yeni mağazada cover göndərmir, redaktədə mövcud cover-a toxunmur. Mağaza səhifəsində cover göstərilirsə, onu yükləmək üçün haradasa sahə lazımdır. Ya formaya qaytarılsın, ya da backend-də istifadədən çıxarılsın.
 - **Loqo limiti:** frontend-də 500 KB, Figma-da 50 MB yazılıb. Backend-də ölçü/format validasiyası olub-olmadığı təsdiqlənməlidir; real limit bir yerdə müəyyən olunsun.
-- **Təsdiq axını:** `is_approved` / `approved_at` var, amma imtina səbəbi sahəsi yoxdur. Admin müraciəti rədd edərsə, istifadəçiyə səbəb göstərmək üçün `rejection_reason` və status (gözləmədə / təsdiqləndi / rədd edildi) lazımdır. Bildirişlərin endpoint-i də hələ yoxdur (bax: `docs/api-contract-notifications.md`).
+- **Təsdiq axını:** `is_approved` / `approved_at` var, amma imtina səbəbi sahəsi yoxdur. Admin müraciəti rədd edərsə, istifadəçiyə səbəb göstərmək üçün `rejection_reason` və status (gözləmədə / təsdiqləndi / rədd edildi) lazımdır. Təsdiq olunanda sahibə «Mağazanız təsdiqləndi» bildirişi artıq gedir; rədd halı üçün bildiriş yoxdur, çünki rədd statusu yoxdur.
 
 ## 🟠 20. Mağazalar (siyahı, mağaza səhifəsi, iş qrafiki, xəritə)
 
@@ -304,16 +304,11 @@ Hər bənd üçün Figma bölməsi və mümkün olduqda node ID verilib.
 - Başlıqsız (yalnız mətnli) bildiriş kartı da dəstəklənir.
 - Elana bağlı bildirişə toxunanda elan detalı açılır. Bağlı deyilsə, başlıqlı aşağıdan pəncərə və "Aydındır" düyməsi göstərilir.
 
-**Backend:** bildiriş endpoint-ləri hələ yoxdur, ekran mock data ilə işləyir. Tam müqavilə və bu frame-lərdən çıxan əlavələr `docs/api-contract-notifications.md`-dədir:
-- başlıqsız bildiriş;
-- read/unread süzgəci;
-- UTC tarixlər;
-- silinmiş elan üçün `listing_id: null`;
-- push token qeydiyyatı və push ayarının serverdə saxlanması.
+**Backend:** ✅ bildirişlər və push prod-dadır (4 okt), ekran real API ilə işləyir. Müqavilə və hadisə siyahısı — `docs/api-contract-notifications.md`. Tənzimləmələrdəki «Push bildirişlər» açarı serverdə saxlanılır.
 
 **Dizaynerdən cavab / düzəliş lazımdır:**
 - **İngiliscə mətnlər:** "Newest First", "Older First", "Read Notification", "Unread Notification", "No Notifications", "We'll let you know when there will be something to update you." Tətbiqdə müvafiq olaraq "Əvvəlcə yeni", "Əvvəlcə köhnə", "Oxunmuş", "Oxunmamış", "Bildiriş yoxdur", "Yeni bir şey olanda sizə xəbər verəcəyik." yazılır. Təsdiq edin və ya öz variantınızı verin.
-- **Nümunə mətn:** kartlarda "Today's the day. Your culinary adventure is almost there." şablon mətni qalıb. Real bildiriş mətnləri (elan təsdiqləndi / rədd edildi / VIP başladı / müddət bitir / balans artımı və s.) üçün dizaynda nümunə yoxdur, tətbiqdəki mətnlər `api-contract`-dakı hadisə siyahısına görə yazılıb.
+- **Nümunə mətn:** kartlarda "Today's the day. Your culinary adventure is almost there." şablon mətni qalıb. Real mətnlər artıq backend-dədir (`notifications/events.py`): elan təsdiqləndi / geri qaytarıldı / müddəti bitdi, VIP / Premium tətbiq olundu və bitir, irəli çəkildi, balans artırıldı, tarif yeniləndi / uğursuz / bitdi, mağaza təsdiqləndi. Dizaynda bir-iki real nümunə ilə əvəzlənsin.
 - **İkonlar:** Figma-da bütün bildirişlərdə eyni zəng ikonu var. Tətbiqdə növə görə fərqli ikonlar işlədilir: VIP üçün zəng, Premium üçün almaz, elan üçün sənəd, ödəniş üçün kart, sistem üçün "i". Hər növ üçün ikon dizaynı verilsə, onlar qoyular.
 - **Silmənin təsdiqi:** Figma-da sürüşdürüb silmədən sonra təsdiq pəncərəsi yoxdur. Tətbiqdə bildiriş dərhal silinir, geri qaytarma ("Geri al") yoxdur. Lazımdırsa, dizaynı verilsin.
 - **Sıralama ikonu:** başlıqda "Sırala" mətni gizlidir, yalnız ⇅ ikonu görünür. Tətbiqdə də belədir.

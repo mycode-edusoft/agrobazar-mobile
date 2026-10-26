@@ -133,6 +133,7 @@ export default function FavoritesScreen() {
       {tab === 'listings' ? (
         <ListingGrid
           data={items}
+          analytics={{ source: 'favorites', blockOf: () => 'favorites' }}
           refreshing={listings.isFetching && !listings.isLoading}
           onRefresh={() => listings.refetch()}
           selectable={selecting}

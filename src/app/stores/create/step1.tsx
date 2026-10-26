@@ -35,7 +35,8 @@ export default function CreateStoreStep1() {
   }, [myStore.data, myStore.isFetched, editing, draft.name, start, startFrom, user]);
 
   const category = categories?.find((c) => c.id === draft.categoryId);
-  const valid = draft.name.trim().length >= 2 && draft.description.trim().length >= 10;
+  // Backend-də minimum uzunluq yoxdur; BRD: ad və təsvir məcburidir
+  const valid = !!draft.name.trim() && !!draft.description.trim();
 
   const next = () => {
     setTouched(true);
@@ -68,7 +69,7 @@ export default function CreateStoreStep1() {
               value={draft.name}
               onChangeText={(v) => set({ name: v })}
               placeholder={t.common.enter}
-              error={touched && draft.name.trim().length < 2 ? t.auth.required : undefined}
+              error={touched && !draft.name.trim() ? t.auth.required : undefined}
             />
           </Section>
           <Section title={t.createStore.description}>
@@ -77,7 +78,7 @@ export default function CreateStoreStep1() {
               onChangeText={(v) => set({ description: v })}
               placeholder={t.createStore.descriptionPlaceholder}
               multiline
-              error={touched && draft.description.trim().length < 10 ? t.auth.required : undefined}
+              error={touched && !draft.description.trim() ? t.auth.required : undefined}
             />
           </Section>
           <Section title={t.createStore.category}>

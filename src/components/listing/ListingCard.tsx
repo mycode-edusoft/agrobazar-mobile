@@ -23,10 +23,12 @@ interface Props {
   showType?: boolean;
   /** Verildikdə sağ yuxarıda ⋮ düyməsi göstərilir (redaktə / sil / yenilə) */
   onMenu?: (item: ListingSummary) => void;
+  /** Detala keçid (statistika üçün; seçim rejimində çağırılmır) */
+  onOpen?: () => void;
 }
 
 export const ListingCard = memo(function ListingCard({
-  item, selectable, selected, onToggleSelect, showFavorite = true, width, showType = true, onMenu,
+  item, selectable, selected, onToggleSelect, showFavorite = true, width, showType = true, onMenu, onOpen,
 }: Props) {
   const router = useRouter();
   const isFav = useFavoritesStore((s) => s.listingIds.has(item.id));
@@ -35,7 +37,10 @@ export const ListingCard = memo(function ListingCard({
 
   const onPress = () => {
     if (selectable) onToggleSelect?.(item.id);
-    else router.push({ pathname: '/listing/[id]', params: { id: item.id } });
+    else {
+      onOpen?.();
+      router.push({ pathname: '/listing/[id]', params: { id: item.id } });
+    }
   };
 
   return (

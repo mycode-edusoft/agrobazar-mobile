@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
+import { isRunningInExpoGo } from 'expo';
 import Constants from 'expo-constants';
-import * as Notifications from 'expo-notifications';
+import type * as NotificationsModule from 'expo-notifications';
 import { api } from '@/services';
 
 /**
@@ -11,9 +12,27 @@ import { api } from '@/services';
  * - Çıxışda token sessiya bağlanmazdan ƏVVƏL silinir — sonra 401 olar və köhnə hesab push almağa davam edər.
  * - Push heç vaxt əsas axını sındırmır: icazə verilməyibsə, FCM qurulmayıbsa (Android) və ya Expo Go-dursa
  *   sadəcə səssizcə söndürülür — bildirişlər tətbiqdə yenə görünür.
+ * - Modul faylın başında import EDİLMİR: SDK 53+ Expo Go-da (Android) `expo-notifications` yüklənən anda xəta
+ *   atır və bu, tətbiqin açılışını sındırırdı. Yalnız lazım olanda və yalnız öz build-imizdə yüklənir.
  */
 
-const supported = Platform.OS === 'android' || Platform.OS === 'ios';
+type Notifications = typeof NotificationsModule;
+
+let loaded: Notifications | null | undefined;
+
+/** Push modulu; Expo Go-da, web-də və ya yüklənə bilməyəndə `null`. */
+function notifications(): Notifications | null {
+  if (loaded !== undefined) return loaded;
+  loaded = null;
+  if ((Platform.OS !== 'android' && Platform.OS !== 'ios') || isRunningInExpoGo()) return loaded;
+  try {
+    loaded = require('expo-notifications') as Notifications;
+  } catch (e) {
+    if (__DEV__) console.warn('[push] expo-notifications yüklənmədi', e);
+  }
+  return loaded;
+}
+
 let registeredToken: string | null = null;
 
 export interface PushData {
@@ -23,7 +42,8 @@ export interface PushData {
 }
 
 export function configurePush() {
-  if (!supported) return;
+  const Notifications = notifications();
+  if (!Notifications) return;
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldPlaySound: true,
@@ -35,7 +55,8 @@ export function configurePush() {
 }
 
 export async function registerForPush(): Promise<void> {
-  if (!supported) return;
+  const Notifications = notifications();
+  if (!Notifications) return;
   try {
     if (Platform.OS === 'android') {
       // Backend push-ları "default" kanalına göndərir
@@ -70,9 +91,10 @@ export async function unregisterPush(): Promise<void> {
 
 /** Push-a toxunuş: hər çağırışda yalnız yeni (hələ emal olunmamış) cavabı qaytarır. */
 export function onPushOpened(handler: (data: PushData) => void): () => void {
-  if (!supported) return () => undefined;
+  const Notifications = notifications();
+  if (!Notifications) return () => undefined;
   let lastId: string | null = null;
-  const handle = (response: Notifications.NotificationResponse | null) => {
+  const handle = (response: NotificationsModule.NotificationResponse | null) => {
     if (!response || response.notification.request.identifier === lastId) return;
     lastId = response.notification.request.identifier;
     handler((response.notification.request.content.data ?? {}) as PushData);
@@ -86,7 +108,8 @@ export function onPushOpened(handler: (data: PushData) => void): () => void {
 
 /** Tətbiq açıqkən push gəldi — badge/siyahı yenilənsin. */
 export function onPushReceived(handler: () => void): () => void {
-  if (!supported) return () => undefined;
+  const Notifications = notifications();
+  if (!Notifications) return () => undefined;
   const sub = Notifications.addNotificationReceivedListener(handler);
   return () => sub.remove();
 }

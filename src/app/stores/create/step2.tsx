@@ -24,7 +24,7 @@ export default function CreateStoreStep2() {
   const [regionOpen, setRegionOpen] = useState(false);
   const [picker, setPicker] = useState<{ day: number; field: 'open' | 'close' } | null>(null);
   const [touched, setTouched] = useState(false);
-  const valid = !!draft.city && draft.address.trim().length >= 3 && draft.week.some((d) => d.enabled);
+  const valid = !!draft.city && !!draft.address.trim() && draft.week.some((d) => d.enabled);
 
   const patchDay = (day: number, patch: Partial<(typeof draft.week)[number]>) =>
     set({ week: draft.week.map((d, i) => (i === day ? { ...d, ...patch } : d)) });
@@ -68,7 +68,7 @@ export default function CreateStoreStep2() {
               value={draft.address}
               onChangeText={(v) => set({ address: v })}
               placeholder={t.createStore.addressPlaceholder}
-              error={touched && draft.address.trim().length < 3 ? t.auth.required : undefined}
+              error={touched && !draft.address.trim() ? t.auth.required : undefined}
             />
           </Section>
           <Section title={t.createStore.workDays}>

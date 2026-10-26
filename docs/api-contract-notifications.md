@@ -68,9 +68,10 @@ Bildiriş mərkəzi saytda eyni endpoint-lərlə işləyir (`customer_access` co
 | Balans artırıldı (yalnız saf top-up) | `payment` | Balans artırıldı |
 | Tarif avto-yeniləndi / uğursuz cəhd (1–3) | `payment` | Tarifiniz yeniləndi / Tarif avto-yeniləmə uğursuz oldu |
 | Mağaza təsdiqləndi | `system` | Mağazanız təsdiqləndi |
+| VIP / Premium bitməsinə ≤24 saat (saatlıq yoxlama; son 24 saatda alınıbsa göndərilmir) | `vip` / `premium` | VIP müddəti bitir / Premium müddəti bitir |
+| Tarifin müddəti bitdi (başqa aktiv tarif yoxdursa) | `payment` | Tarifinizin müddəti bitdi |
 
-Hələ yoxdur: «VIP/Premium bitmək üzrədir» (dövri tapşırıq lazımdır), «tarifiniz bitdi» (backend `expire_subscriptions_task`
-beat-də deyil — bugs.md A12).
+Tarixlər bildiriş mətnində Bakı vaxtı ilədir.
 
 ## Seçilmiş mağazalar — `auth/customers/store-favorites/`
 Giriş edilibsə profil, edilməyibsə qonaq (`X-Visitor-Id` başlığı / `ab_vid` cookie — elan seçilmişləri ilə eyni).

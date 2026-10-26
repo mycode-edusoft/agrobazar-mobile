@@ -68,6 +68,7 @@ export const t = {
     fullName: 'Ad, Soyad',
     email: 'Email',
     invalidEmail: 'Email düzgün deyil',
+    invalidPhone: 'Nömrəni düzgün daxil edin',
     required: 'Bu sahə məcburidir',
     loginRequired: 'Bu əməliyyat üçün giriş etməlisiniz',
   },
@@ -218,6 +219,7 @@ export const t = {
     onlyActive: 'Yalnız aktiv elana tətbiq edilə bilər',
   },
   createListing: {
+    fixErrors: 'Qırmızı ilə qeyd olunmuş sahələri yoxlayın',
     title: 'Yeni elan',
     selectCategory: 'Kateqoriya seç',
     productCategory: 'Məhsul kateqoriyası',

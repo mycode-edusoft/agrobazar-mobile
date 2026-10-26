@@ -46,6 +46,7 @@ export default function CategoryListingScreen() {
   });
 
   const items = list.data?.pages.flatMap((p) => p.items) ?? [];
+  const premiumCount = searching ? 0 : premium.data?.length ?? 0;
   const title = isAll ? (effective.query ? `"${effective.query}"` : t.catalog.title) : category?.name ?? t.catalog.title;
 
   // Figma: çiplər növlərdir (Bizon, Buğa, Dana…) — alt kateqoriya seçilibsə yalnız onunkular.
@@ -94,6 +95,11 @@ export default function CategoryListingScreen() {
       </View>
       <ListingGrid
         data={searching ? items : [...(premium.data ?? []), ...items]}
+        analytics={{
+          source: searching ? 'search' : 'category',
+          // Premium kartlar siyahının əvvəlinə qoşulur
+          blockOf: (_item, index) => (index < premiumCount ? 'premium' : 'standart'),
+        }}
         header={header}
         empty={list.isLoading ? null : <EmptyState text={t.catalog.noResults} icon="search-outline" />}
         onEndReached={() => list.hasNextPage && !list.isFetchingNextPage && list.fetchNextPage()}

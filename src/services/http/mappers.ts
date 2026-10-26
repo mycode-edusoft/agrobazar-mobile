@@ -111,6 +111,7 @@ export function mapSummary(l: ApiListing): ListingSummary {
   rememberFromListing(l);
   return {
     id: l.slug || String(l.id),
+    pk: l.id,
     title: l.title,
     price: toNumber(l.price),
     negotiable: toNumber(l.price) == null,

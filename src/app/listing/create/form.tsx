@@ -20,6 +20,8 @@ import type { DynamicFieldDef, ListingType } from '@/types/domain';
 import { Icon } from '@/components/icons/Icon';
 
 const listingTypes: ListingType[] = ['sale', 'rent', 'wanted', 'offer'];
+// Backend: Listing.title max_length=50 — daha uzun başlığı server rədd edir
+const LISTING_TITLE_MAX = 50;
 
 export default function CreateListingFormScreen() {
   const router = useRouter();
@@ -58,9 +60,11 @@ export default function CreateListingFormScreen() {
     // "Təklif olunur" elanında qiymət məcburi deyil (Figma-da ayrıca "Razılaşma yolu ilə" seçimi yoxdur)
     if (draft.type !== 'offer' && !draft.negotiable && !(Number(draft.price.replace(',', '.')) > 0)) e.price = t.auth.required;
     if (!draft.city) e.city = t.auth.required;
-    if (draft.title.trim().length < 3) e.title = t.auth.required;
-    if (draft.description.trim().length < 10) e.description = t.auth.required;
-    if (!isValidAzPhone(draft.whatsapp)) e.whatsapp = t.auth.required;
+    // Qaydalar backend və web ilə eynidir: başlıq və məzmun boş olmamalıdır (minimum uzunluq yoxdur)
+    if (!draft.title.trim()) e.title = t.auth.required;
+    if (!draft.description.trim()) e.description = t.auth.required;
+    if (!draft.whatsapp.trim()) e.whatsapp = t.auth.required;
+    else if (!isValidAzPhone(draft.whatsapp)) e.whatsapp = t.auth.invalidPhone;
     for (const f of fieldDefs) if (f.required && !draft.fields[f.key]) e[`field:${f.key}`] = t.auth.required;
     if (draft.images.length < imageLimit.min) e.images = t.createListing.imagesHint(imageLimit.min, imageLimit.max);
     if (!draft.agreed) e.agreed = t.auth.required;
@@ -72,7 +76,7 @@ export default function CreateListingFormScreen() {
   const submit = async () => {
     setTouched(true);
     if (Object.keys(errors).length > 0) {
-      toast(t.auth.required, 'error');
+      toast(t.createListing.fixErrors, 'error');
       return;
     }
     setSubmitting(true);
@@ -243,7 +247,7 @@ export default function CreateListingFormScreen() {
           </Section>
 
           <Section title={t.createListing.listingTitle}>
-            <Field value={draft.title} onChangeText={(v) => set({ title: v })} placeholder={t.common.enter} error={err('title')} maxLength={80} />
+            <Field value={draft.title} onChangeText={(v) => set({ title: v })} placeholder={t.common.enter} error={err('title')} maxLength={LISTING_TITLE_MAX} />
           </Section>
 
           <Section title={t.createListing.description}>

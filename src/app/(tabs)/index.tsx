@@ -45,6 +45,7 @@ export default function HomeScreen() {
     <Screen header={<HomeHeader />}>
       <ListingGrid
         data={premiumItems}
+        analytics={{ source: 'premium_block', blockOf: () => 'premium' }}
         header={
           <View style={styles.headerBlock}>
             <View style={styles.searchBlock}>
